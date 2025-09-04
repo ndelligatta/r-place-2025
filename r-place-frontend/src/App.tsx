@@ -22,6 +22,7 @@ export default function App() {
   const [palette] = useState<string[]>(DEFAULT_COLORS)
   const [selected, setSelected] = useState(2) // start spicy magenta
   const [cooldown, setCooldown] = useState(0)
+  const [status, setStatus] = useState<{ supabase: boolean; boardSource: 'server'|'local'|null; lastPersistError?: string }>({ supabase: false, boardSource: null })
   const size = 128
   const initial = useMemo(() => new Uint16Array(size * size).fill(0), [])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
@@ -72,6 +73,7 @@ export default function App() {
             selectedIndex={selected}
             initial={initial}
             onCooldownChange={setCooldown}
+            onStatusChange={setStatus}
           />
         </div>
         <aside
@@ -101,6 +103,27 @@ export default function App() {
       <footer className="mx-auto max-w-[1200px] px-4 py-6 opacity-70 text-xs">
         <span>made for the culture. mod it, fork it, paint it.</span>
       </footer>
+
+      {/* Connection badge */}
+      <div style={{ position: 'fixed', right: 12, bottom: 12, zIndex: 30 }}>
+        <div
+          className="text-xs"
+          style={{
+            padding: '6px 10px',
+            borderRadius: 8,
+            background: 'rgba(0,0,0,0.55)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(6px)',
+          }}
+        >
+          <span style={{ color: status.supabase ? '#00FFA3' : '#FF3CF7' }}>
+            {status.supabase ? 'Supabase: connected' : 'Supabase: offline'}
+          </span>
+          {status.boardSource ? (
+            <span style={{ marginLeft: 8, opacity: 0.8 }}>src: {status.boardSource}</span>
+          ) : null}
+        </div>
+      </div>
     </div>
   )
 }

@@ -7,9 +7,10 @@ type Props = {
   selectedIndex: number
   initial?: Uint16Array
   onCooldownChange?: (seconds: number) => void
+  onStatusChange?: (s: { supabase: boolean; boardSource: 'server' | 'local' | null; lastPersistError?: string }) => void
 }
 
-export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange }: Props) {
+export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => {
     try {
@@ -30,6 +31,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   const [cooldown, setCooldown] = useState(0)
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
+  useEffect(() => {
+    if (onStatusChange) onStatusChange({ supabase: !!supabase, boardSource: null })
+  }, [!!supabase])
   const channelRef = useRef<ReturnType<NonNullable<typeof supabase>['channel']> | null>(null)
 
   // Helpers to encode/decode board state as base64
@@ -106,9 +110,11 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         if (!cancelled && row && row.data) {
           const decoded = decodeBoard(row.data as unknown as string)
           if (decoded && decoded.length === size * size) setData(decoded)
+          if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'server' })
         }
         if (error) {
           // ignore: table may not exist yet
+          if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local' })
         }
       } catch {}
     })()
@@ -260,8 +266,12 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       const payload = { id: 1, data: encodeBoard(nextState) }
       // Use then(success, failure) to avoid PromiseLike catch type issue in TS
       supabase.from('boards').upsert(payload).then(
-        () => {},
-        () => {}
+        () => {
+          if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'server' })
+        },
+        (err) => {
+          if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local', lastPersistError: String(err && (err.message || err)) })
+        }
       )
     }
     setCooldown(5) // seconds
