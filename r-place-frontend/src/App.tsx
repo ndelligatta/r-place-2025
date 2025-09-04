@@ -22,7 +22,8 @@ export default function App() {
   const [palette] = useState<string[]>(DEFAULT_COLORS)
   const [selected, setSelected] = useState(2) // start spicy magenta
   const [cooldown, setCooldown] = useState(0)
-  const size = 128
+  const size = 32
+  const boardId = 2
   const initial = useMemo(() => new Uint16Array(size * size).fill(0), [])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
   const [asideHeight, setAsideHeight] = useState<number | null>(null)
@@ -72,6 +73,7 @@ export default function App() {
             selectedIndex={selected}
             initial={initial}
             onCooldownChange={setCooldown}
+            boardId={boardId}
           />
         </div>
         <aside

@@ -8,13 +8,14 @@ type Props = {
   initial?: Uint16Array
   onCooldownChange?: (seconds: number) => void
   onStatusChange?: (s: { supabase: boolean; boardSource: 'server' | 'local' | null; lastPersistError?: string }) => void
+  boardId?: number
 }
 
-export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange }: Props) {
+export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => {
     try {
-      const saved = localStorage.getItem('rplace_board_v1')
+      const saved = localStorage.getItem(`rplace_board_v1_${boardId}`)
       if (saved) {
         const binary = atob(saved)
         const bytes = new Uint8Array(binary.length)
@@ -24,7 +25,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     } catch {}
     return initial ? initial.slice() : new Uint16Array(size * size)
   })
-  const scale = 3
+  const scale = 16
   const [cooldown, setCooldown] = useState(0)
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
@@ -106,7 +107,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         const { data: row, error } = await supabase
           .from('boards')
           .select('data')
-          .eq('id', 1)
+          .eq('id', boardId)
           .single()
         if (!cancelled && row && row.data) {
           const decoded = decodeBoard(row.data as unknown as string)
@@ -129,7 +130,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       } catch {}
     })()
     const channel = supabase
-      .channel('board-1', { config: { broadcast: { self: false } } })
+      .channel(`board-${boardId}`, { config: { broadcast: { self: false } } })
       .on('broadcast', { event: 'pixel' }, (payload: any) => {
         const p = payload?.payload as { x: number; y: number; colorIndex: number } | undefined
         if (!p) return
@@ -150,7 +151,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       if (channelRef.current && supabase) supabase.removeChannel(channelRef.current)
       channelRef.current = null
     }
-  }, [supabase, size])
+  }, [supabase, size, boardId])
 
   // Draw
   useEffect(() => {
@@ -208,11 +209,11 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         const bytes = new Uint8Array(data.buffer)
         let bin = ''
         for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
-        localStorage.setItem('rplace_board_v1', btoa(bin))
+        localStorage.setItem(`rplace_board_v1_${boardId}`, btoa(bin))
       } catch {}
     }, 200)
     return () => clearTimeout(id)
-  }, [data])
+  }, [data, boardId])
 
   // Disable zoom: wheel handler removed
   useEffect(() => {}, [])
@@ -254,7 +255,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     }
     // Persist board snapshot (simple last-write-wins)
     if (supabase && nextState) {
-      const payload = { id: 1, data: encodeBoard(nextState) }
+    const payload = { id: boardId, data: encodeBoard(nextState) }
       // Use then(success, failure) to avoid PromiseLike catch type issue in TS
       supabase.from('boards').upsert(payload).then(
         () => {
