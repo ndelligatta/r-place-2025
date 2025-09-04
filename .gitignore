@@ -1,0 +1,13 @@
+# Project-level ignores
+node_modules/
+dist/
+
+# Subproject build artifacts
+r-place-frontend/node_modules/
+r-place-frontend/dist/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.log
+
