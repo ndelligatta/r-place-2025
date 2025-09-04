@@ -72,7 +72,7 @@ export default function App() {
       <header className="sticky top-0 z-20 panel glow-cyan">
         <div className="mx-auto max-w-[1200px] px-4 py-4 flex items-center justify-center text-center">
           <h1 className="epic-title" style={{ fontSize: 'clamp(28px, 6vw, 56px)' }}>
-            r/place 2025
+            r/place 25
           </h1>
         </div>
       </header>

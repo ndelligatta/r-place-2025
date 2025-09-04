@@ -30,7 +30,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
               key={i}
               onClick={() => onSelect(i)}
               title={c}
-              className="relative h-20 rounded-md transition-transform active:scale-95 flex items-center justify-center"
+              className="relative h-16 md:h-18 rounded-md transition-transform active:scale-95 flex items-center justify-center"
               style={style}
               data-demo-swatch={isSelected ? 'true' : undefined}
               data-swatch-index={i}
