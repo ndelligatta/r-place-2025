@@ -58,7 +58,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
 
       {cooldown > 0 ? (
         <div
-          className="absolute inset-0 z-10 flex items-center p-4 md:p-6"
+          className="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-6"
           style={{
             background: 'rgba(0,0,0,0.55)',
             backdropFilter: 'blur(8px) saturate(120%)',
