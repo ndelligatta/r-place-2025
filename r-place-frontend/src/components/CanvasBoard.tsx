@@ -158,8 +158,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
-    const w = canvas.width
-    const h = canvas.height
+    const rect = canvas.getBoundingClientRect()
+    const w = Math.floor(rect.width)
+    const h = Math.floor(rect.height)
 
     // Center the board within the canvas
     const px = Math.max(1, scale)
