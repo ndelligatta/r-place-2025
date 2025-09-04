@@ -184,8 +184,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
 
     // Grid lines when zoomed
     if (scale >= 8) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)'
-      ctx.lineWidth = 1
+      const alpha = Math.min(0.22, 0.06 + (scale - 8) * 0.02)
+      ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`
+      ctx.lineWidth = Math.min(2, Math.max(1, Math.floor(scale / 8)))
       for (let y = 0; y <= dims.height; y++) {
         const yy = Math.floor(y * scale + offset.y) + 0.5
         if (yy < 0 || yy > h) continue

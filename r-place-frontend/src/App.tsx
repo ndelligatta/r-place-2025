@@ -124,6 +124,49 @@ export default function App() {
           ) : null}
         </div>
       </div>
+
+      {/* Quick tutorial */}
+      <TutorialCard />
+    </div>
+  )
+}
+
+function TutorialCard() {
+  const [open, setOpen] = useState(() => {
+    try { return localStorage.getItem('rplace_help_v1') !== 'dismissed' } catch { return true }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('rplace_help_v1', open ? 'open' : 'dismissed') } catch {}
+  }, [open])
+  if (!open) return null
+  return (
+    <div style={{ position: 'fixed', left: 12, bottom: 12, zIndex: 25, maxWidth: 380 }}>
+      <div
+        className="text-sm panel glow-cyan"
+        style={{
+          borderRadius: 12,
+          padding: '12px 14px',
+          border: '1px solid rgba(255,255,255,0.14)'
+        }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="font-semibold ticker-glow" style={{ marginBottom: 6 }}>How to play</div>
+            <ul style={{ margin: 0, paddingLeft: '1.1em', lineHeight: 1.35 }}>
+              <li>Select a color from the palette</li>
+              <li>Click a pixel on the board to paint</li>
+              <li>Scroll to zoom, drag to pan</li>
+              <li>Wait for cooldown before placing again</li>
+              <li>Your moves sync live for everyone</li>
+            </ul>
+          </div>
+          <button
+            className="btn-neon"
+            onClick={() => setOpen(false)}
+            style={{ padding: '6px 8px', fontSize: 12 }}
+          >Got it</button>
+        </div>
+      </div>
     </div>
   )
 }

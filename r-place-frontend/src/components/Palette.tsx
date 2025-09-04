@@ -52,15 +52,16 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
             style={{
               border: '1px solid rgba(255,255,255,0.22)',
               borderRadius: 16,
-              padding: '22px 26px',
-              maxWidth: 'min(520px, 100%)',
+              padding: '28px 32px',
+              maxWidth: 'min(620px, 100%)',
               width: '100%',
+              minHeight: '180px',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
               boxShadow: '0 0 40px rgba(255,60,247,0.35), 0 0 34px rgba(0,247,255,0.25)'
             }}
           >
-            <div className="font-bold ticker-glow" style={{ fontSize: 'clamp(24px, 3.2vw, 40px)' }}>Cooldown Active</div>
-            <div className="mt-3" style={{ fontSize: 'clamp(18px, 2.4vw, 24px)' }}>
+            <div className="font-bold ticker-glow" style={{ fontSize: 'clamp(28px, 3.8vw, 48px)' }}>Cooldown Active</div>
+            <div className="mt-4" style={{ fontSize: 'clamp(18px, 2.4vw, 26px)' }}>
               Please wait
               <span className="font-mono" style={{ color: 'var(--color-neon-yellow)', marginLeft: 8 }}>
                 {cooldown.toFixed(1)}s
