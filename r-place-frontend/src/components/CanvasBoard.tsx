@@ -100,6 +100,10 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   useEffect(() => {
     if (!supabase) return
     let cancelled = false
+    const localHasColors = (() => {
+      for (let i = 0; i < data.length; i++) if (data[i] !== 0) return true
+      return false
+    })()
     ;(async () => {
       try {
         const { data: row, error } = await supabase
@@ -109,8 +113,17 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           .single()
         if (!cancelled && row && row.data) {
           const decoded = decodeBoard(row.data as unknown as string)
-          if (decoded && decoded.length === size * size) setData(decoded)
-          if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'server' })
+          if (decoded && decoded.length === size * size) {
+            let remoteHasColors = false
+            for (let i = 0; i < decoded.length; i++) if (decoded[i] !== 0) { remoteHasColors = true; break }
+            // Prefer local if it already has colors; otherwise adopt server snapshot
+            if (!localHasColors && remoteHasColors) {
+              setData(decoded)
+              if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'server' })
+            } else {
+              if (onStatusChange) onStatusChange({ supabase: true, boardSource: localHasColors ? 'local' : 'server' })
+            }
+          }
         }
         if (error) {
           // ignore: table may not exist yet
