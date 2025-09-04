@@ -9,9 +9,12 @@ type Props = {
   onCooldownChange?: (seconds: number) => void
   onStatusChange?: (s: { supabase: boolean; boardSource: 'server' | 'local' | null; lastPersistError?: string }) => void
   boardId?: number
+  presenceKey?: string
+  presenceMeta?: Record<string, any>
+  onPlayersChange?: (players: Array<{ key: string; meta: any }>) => void
 }
 
-export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1 }: Props) {
+export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => {
     try {
@@ -129,7 +132,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       } catch {}
     })()
     const channel = supabase
-      .channel(`board-${boardId}`, { config: { broadcast: { self: false } } })
+      .channel(`board-${boardId}`, { config: { broadcast: { self: false }, presence: { key: presenceKey || 'anon' } } })
       .on('broadcast', { event: 'pixel' }, (payload: any) => {
         const p = payload?.payload as { x: number; y: number; colorIndex: number } | undefined
         if (!p) return
@@ -143,14 +146,26 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           return next
         })
       })
+      .on('presence', { event: 'sync' }, () => {
+        if (!onPlayersChange) return
+        const state = channel.presenceState() as Record<string, any[]>
+        const list: Array<{ key: string; meta: any }> = []
+        for (const [key, metas] of Object.entries(state)) {
+          for (const m of metas) list.push({ key, meta: m })
+        }
+        onPlayersChange(list)
+      })
       .subscribe()
     channelRef.current = channel
+
+    // Track our presence
+    try { channel.track(presenceMeta || {}) } catch {}
     return () => {
       cancelled = true
       if (channelRef.current && supabase) supabase.removeChannel(channelRef.current)
       channelRef.current = null
     }
-  }, [supabase, size, boardId])
+  }, [supabase, size, boardId, presenceKey])
 
   // Draw
   useEffect(() => {

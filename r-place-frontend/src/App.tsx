@@ -3,6 +3,7 @@ import TickerBar from './components/TickerBar'
 import CanvasBoard from './components/CanvasBoard'
 import Palette from './components/Palette'
 import BackgroundShader from './components/BackgroundShader'
+import { useMemo as useMemo2 } from 'react'
 import OnboardingDemo from './components/OnboardingDemo'
 
 const DEFAULT_COLORS = [
@@ -28,6 +29,22 @@ export default function App() {
   const initial = useMemo(() => new Uint16Array(size * size).fill(0), [])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
   const [asideHeight, setAsideHeight] = useState<number | null>(null)
+
+  // Generate guest identity once
+  const me = useMemo2(() => {
+    try {
+      const saved = localStorage.getItem('rplace_user_v1')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    const id = 'guest_' + Math.random().toString(36).slice(2, 8)
+    const name = 'Guest ' + Math.floor(1000 + Math.random() * 9000)
+    const color = DEFAULT_COLORS[(2 + Math.floor(Math.random() * (DEFAULT_COLORS.length - 2))) % DEFAULT_COLORS.length]
+    const obj = { id, name, color }
+    try { localStorage.setItem('rplace_user_v1', JSON.stringify(obj)) } catch {}
+    return obj
+  }, [])
+
+  const [players, setPlayers] = useState<Array<{ key: string; meta: any }>>([])
 
   useLayoutEffect(() => {
     const el = canvasPanelRef.current
@@ -75,6 +92,9 @@ export default function App() {
             initial={initial}
             onCooldownChange={setCooldown}
             boardId={boardId}
+            presenceKey={me.id}
+            presenceMeta={{ name: me.name, color: me.color }}
+            onPlayersChange={setPlayers}
           />
         </div>
         <aside
@@ -88,6 +108,10 @@ export default function App() {
 
           <div className="mt-6 space-y-3 text-sm">
             <div className="flex items-center justify-between">
+              <span className="opacity-80">Now playing</span>
+              <span className="font-mono" style={{ color: 'var(--color-neon-green)' }}>{players.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
               <span className="opacity-80">Cooldown</span>
               <span className="font-mono" style={{ color: 'var(--color-neon-yellow)' }}>5s</span>
             </div>
@@ -95,6 +119,19 @@ export default function App() {
               <span className="opacity-80">Canvas</span>
               <span className="font-mono">{size}×{size}</span>
             </div>
+            {players.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {players.slice(0, 12).map((p, i) => (
+                  <span key={i} className="px-2 py-1 rounded text-[11px]" style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.12)'
+                  }}>
+                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 9999, background: p.meta?.color || '#888', marginRight: 6 }} />
+                    {p.meta?.name || p.key}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {/* removed the connect wallet button per request */}
