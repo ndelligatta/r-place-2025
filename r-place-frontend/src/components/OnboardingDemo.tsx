@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Point = { x: number; y: number }
 
@@ -103,4 +103,3 @@ export default function OnboardingDemo() {
     </div>
   )
 }
-
