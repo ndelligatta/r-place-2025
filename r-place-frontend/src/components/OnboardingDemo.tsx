@@ -84,6 +84,16 @@ export default function OnboardingDemo() {
     return () => { if (raf) cancelAnimationFrame(raf) }
   }, [show])
 
+  // Allow manual replay via a custom event
+  useEffect(() => {
+    function onReplay() {
+      try { localStorage.removeItem('rplace_demo_v1') } catch {}
+      setShow(true)
+    }
+    window.addEventListener('rplace:demo:play' as any, onReplay)
+    return () => window.removeEventListener('rplace:demo:play' as any, onReplay)
+  }, [])
+
   if (!show) return null
   return (
     <div

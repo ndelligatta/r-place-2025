@@ -5,6 +5,7 @@ import Palette from './components/Palette'
 import BackgroundShader from './components/BackgroundShader'
 import { useMemo as useMemo2 } from 'react'
 import OnboardingDemo from './components/OnboardingDemo'
+import DemoCta from './components/DemoCta'
 
 const DEFAULT_COLORS = [
   // bases
@@ -146,6 +147,7 @@ export default function App() {
 
       {/* Quick tutorial */}
       <TutorialCard />
+      <DemoCta />
       <OnboardingDemo />
     </div>
   )
@@ -181,9 +183,9 @@ function TutorialCard() {
             </ul>
           </div>
           <button
-            className="btn-neon"
+            className="btn-neon neon-pulse"
             onClick={() => setOpen(false)}
-            style={{ padding: '6px 8px', fontSize: 12 }}
+            style={{ padding: '10px 14px', fontSize: 14, fontWeight: 700 }}
           >Got it</button>
         </div>
       </div>
