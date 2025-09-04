@@ -252,7 +252,11 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial }: P
     // Persist board snapshot (simple last-write-wins)
     if (supabase && nextState) {
       const payload = { id: 1, data: encodeBoard(nextState) }
-      supabase.from('boards').upsert(payload).then(() => {}).catch(() => {})
+      // Use then(success, failure) to avoid PromiseLike catch type issue in TS
+      supabase.from('boards').upsert(payload).then(
+        () => {},
+        () => {}
+      )
     }
     setCooldown(5) // seconds
   }
