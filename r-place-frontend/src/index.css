@@ -121,7 +121,6 @@ body {
 .epic-title {
   font-weight: 900;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   background: linear-gradient(110deg, #f8fafc 0%, #cdd6df 25%, #ffffff 50%, #b9c6d3 75%, #e6eef7 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
