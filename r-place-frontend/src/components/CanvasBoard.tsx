@@ -285,7 +285,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         }
       )
     }
-    setCooldown(5) // seconds
+    setCooldown(3) // seconds
   }
 
   return (
