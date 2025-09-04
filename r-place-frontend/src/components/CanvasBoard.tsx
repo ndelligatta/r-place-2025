@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { getSupabase } from '../lib/supabaseClient'
 
 type Props = {
   size: number
@@ -27,6 +28,26 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial }: P
   const [last, setLast] = useState({ x: 0, y: 0 })
   const [cooldown, setCooldown] = useState(0)
   const [tick, setTick] = useState(0) // force redraw after resize
+  const supabase = useMemo(() => getSupabase(), [])
+  const channelRef = useRef<ReturnType<NonNullable<typeof supabase>['channel']> | null>(null)
+
+  // Helpers to encode/decode board state as base64
+  function encodeBoard(arr: Uint16Array): string {
+    const bytes = new Uint8Array(arr.buffer)
+    let bin = ''
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+    return btoa(bin)
+  }
+  function decodeBoard(b64: string): Uint16Array | null {
+    try {
+      const bin = atob(b64)
+      const bytes = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+      return new Uint16Array(bytes.buffer)
+    } catch {
+      return null
+    }
+  }
 
   // Cooldown timer
   useEffect(() => {
@@ -64,6 +85,50 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial }: P
       window.removeEventListener('resize', onResize)
     }
   }, [])
+
+  // Supabase: load initial board and subscribe to realtime pixel updates
+  useEffect(() => {
+    if (!supabase) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data: row, error } = await supabase
+          .from('boards')
+          .select('data')
+          .eq('id', 1)
+          .single()
+        if (!cancelled && row && row.data) {
+          const decoded = decodeBoard(row.data as unknown as string)
+          if (decoded && decoded.length === size * size) setData(decoded)
+        }
+        if (error) {
+          // ignore: table may not exist yet
+        }
+      } catch {}
+    })()
+    const channel = supabase
+      .channel('board-1', { config: { broadcast: { self: false } } })
+      .on('broadcast', { event: 'pixel' }, (payload: any) => {
+        const p = payload?.payload as { x: number; y: number; colorIndex: number } | undefined
+        if (!p) return
+        const { x, y, colorIndex } = p
+        if (x < 0 || y < 0 || x >= size || y >= size) return
+        const idx = y * size + x
+        setData((arr) => {
+          if (arr[idx] === colorIndex) return arr
+          const next = arr.slice()
+          next[idx] = colorIndex
+          return next
+        })
+      })
+      .subscribe()
+    channelRef.current = channel
+    return () => {
+      cancelled = true
+      if (channelRef.current && supabase) supabase.removeChannel(channelRef.current)
+      channelRef.current = null
+    }
+  }, [supabase, size])
 
   // Draw
   useEffect(() => {
@@ -171,11 +236,24 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial }: P
     const { x, y } = canvasToCell(e.clientX, e.clientY)
     if (x < 0 || y < 0 || x >= dims.width || y >= dims.height) return
     const idx = y * dims.width + x
+    let nextState: Uint16Array | null = null
     setData((arr) => {
       const next = arr.slice()
       next[idx] = selectedIndex
+      nextState = next
       return next
     })
+    // Broadcast realtime update
+    if (supabase && channelRef.current) {
+      try {
+        channelRef.current.send({ type: 'broadcast', event: 'pixel', payload: { x, y, colorIndex: selectedIndex } })
+      } catch {}
+    }
+    // Persist board snapshot (simple last-write-wins)
+    if (supabase && nextState) {
+      const payload = { id: 1, data: encodeBoard(nextState) }
+      supabase.from('boards').upsert(payload).then(() => {}).catch(() => {})
+    }
     setCooldown(5) // seconds
   }
 
