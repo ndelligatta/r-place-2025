@@ -3,6 +3,10 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  VITE_SUPABASE_URL = "https://gmpkqaxqpzwskgkcobfj.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcGtxYXhxcHp3c2tna2NvYmZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5NzQzNDQsImV4cCI6MjA3MjU1MDM0NH0.iQSOO9VaJHucDL_-GBRlyRXUygV6ipMOZLAh00xxsag"
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
@@ -12,4 +16,3 @@
   for = "/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
-
