@@ -286,6 +286,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-crosshair"
+          data-board-canvas="true"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}

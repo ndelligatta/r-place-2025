@@ -32,6 +32,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
               title={c}
               className="relative h-20 rounded-md transition-transform active:scale-95 flex items-center justify-center"
               style={style}
+              data-demo-swatch={isSelected ? 'true' : undefined}
             >
               {/* Pure color swatch; coin logos removed */}
             </button>

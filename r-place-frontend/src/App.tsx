@@ -3,6 +3,7 @@ import TickerBar from './components/TickerBar'
 import CanvasBoard from './components/CanvasBoard'
 import Palette from './components/Palette'
 import BackgroundShader from './components/BackgroundShader'
+import OnboardingDemo from './components/OnboardingDemo'
 
 const DEFAULT_COLORS = [
   // bases
@@ -108,6 +109,7 @@ export default function App() {
 
       {/* Quick tutorial */}
       <TutorialCard />
+      <OnboardingDemo />
     </div>
   )
 }
