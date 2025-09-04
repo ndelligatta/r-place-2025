@@ -21,6 +21,7 @@ const DEFAULT_COLORS = [
 export default function App() {
   const [palette] = useState<string[]>(DEFAULT_COLORS)
   const [selected, setSelected] = useState(2) // start spicy magenta
+  const [cooldown, setCooldown] = useState(0)
   const size = 128
   const initial = useMemo(() => new Uint16Array(size * size).fill(0), [])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
@@ -65,7 +66,13 @@ export default function App() {
 
       <main className="flex-1 mx-auto max-w-[1200px] w-full px-4 py-6 flex gap-6 items-start">
         <div ref={canvasPanelRef} className="panel rounded-lg p-3 md:p-4 glow-cyan flex-1 min-w-0">
-          <CanvasBoard size={size} palette={palette} selectedIndex={selected} initial={initial} />
+          <CanvasBoard
+            size={size}
+            palette={palette}
+            selectedIndex={selected}
+            initial={initial}
+            onCooldownChange={setCooldown}
+          />
         </div>
         <aside
           className="panel neon-3d rounded-lg p-4 glow-magenta w-[420px] shrink-0 flex flex-col"
@@ -73,7 +80,7 @@ export default function App() {
         >
           <h2 className="text-lg font-semibold mb-3">Palette</h2>
           <div className="flex-1 min-h-0">
-            <Palette colors={palette} selected={selected} onSelect={setSelected} />
+            <Palette colors={palette} selected={selected} onSelect={setSelected} cooldown={cooldown} />
           </div>
 
           <div className="mt-6 space-y-3 text-sm">

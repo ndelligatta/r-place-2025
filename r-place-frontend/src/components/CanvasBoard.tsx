@@ -6,9 +6,10 @@ type Props = {
   palette: string[]
   selectedIndex: number
   initial?: Uint16Array
+  onCooldownChange?: (seconds: number) => void
 }
 
-export default function CanvasBoard({ size, palette, selectedIndex, initial }: Props) {
+export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => {
     try {
@@ -55,6 +56,11 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial }: P
     const id = setInterval(() => setCooldown((c) => Math.max(0, c - 0.1)), 100)
     return () => clearInterval(id)
   }, [cooldown])
+
+  // Notify parent about cooldown changes
+  useEffect(() => {
+    if (onCooldownChange) onCooldownChange(cooldown)
+  }, [cooldown, onCooldownChange])
 
   const dims = useMemo(() => ({ width: size, height: size }), [size])
 
