@@ -160,6 +160,14 @@ function TutorialCard() {
   useEffect(() => {
     try { localStorage.setItem('rplace_help_v1', open ? 'open' : 'dismissed') } catch {}
   }, [open])
+  useEffect(() => {
+    function onOpen() {
+      setOpen(true)
+      try { localStorage.setItem('rplace_help_v1', 'open') } catch {}
+    }
+    window.addEventListener('rplace:help:open' as any, onOpen)
+    return () => window.removeEventListener('rplace:help:open' as any, onOpen)
+  }, [])
   if (!open) return null
   return (
     <div style={{ position: 'fixed', left: 12, bottom: 12, zIndex: 25, maxWidth: 380 }}>

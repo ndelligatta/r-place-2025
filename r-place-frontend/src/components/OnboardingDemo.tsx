@@ -102,7 +102,7 @@ export default function OnboardingDemo() {
     >
       {/* fake cursor */}
       <div ref={cursorRef} style={{ position: 'absolute', transform: 'translate(-100px,-100px)' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style={{ filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.9))' }}>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="white" style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.9))' }}>
           <path d="M3 2l8 14 2-5 6-2L3 2z" />
         </svg>
       </div>
