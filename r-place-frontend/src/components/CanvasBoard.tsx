@@ -24,10 +24,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     } catch {}
     return initial ? initial.slice() : new Uint16Array(size * size)
   })
-  const [scale, setScale] = useState(4)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
-  const [isPanning, setIsPanning] = useState(false)
-  const [last, setLast] = useState({ x: 0, y: 0 })
+  const scale = 4
+  const offset = { x: 0, y: 0 }
   const [cooldown, setCooldown] = useState(0)
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
