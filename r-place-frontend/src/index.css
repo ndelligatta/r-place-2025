@@ -64,6 +64,20 @@ body {
   to { transform: translateX(-50%); }
 }
 
+/* Fancy neon pulse for overlays */
+@keyframes neon-pulse {
+  0% {
+    box-shadow: 0 0 24px rgba(255,60,247,0.28), 0 0 22px rgba(0,247,255,0.2);
+  }
+  50% {
+    box-shadow: 0 0 46px rgba(255,60,247,0.45), 0 0 38px rgba(0,247,255,0.32);
+  }
+  100% {
+    box-shadow: 0 0 24px rgba(255,60,247,0.28), 0 0 22px rgba(0,247,255,0.2);
+  }
+}
+.neon-pulse { animation: neon-pulse 1.5s ease-in-out infinite; }
+
 .btn-neon {
   position: relative;
   display: inline-flex;

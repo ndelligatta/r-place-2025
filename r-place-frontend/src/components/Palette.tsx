@@ -41,25 +41,30 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
 
       {cooldown > 0 ? (
         <div
-          className="absolute inset-0 z-10 flex items-center justify-center p-6"
+          className="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-6"
           style={{
-            background: 'rgba(0,0,0,0.75)',
-            backdropFilter: 'blur(2px)',
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(8px) saturate(120%)',
           }}
         >
           <div
-            className="text-center"
+            className="text-center neon-pulse"
             style={{
-              border: '1px solid rgba(255,255,255,0.18)',
-              borderRadius: 12,
-              padding: '18px 22px',
-              boxShadow: '0 0 24px rgba(255,60,247,0.35), 0 0 24px rgba(0,247,255,0.25)'
+              border: '1px solid rgba(255,255,255,0.22)',
+              borderRadius: 16,
+              padding: '22px 26px',
+              maxWidth: 'min(520px, 100%)',
+              width: '100%',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
+              boxShadow: '0 0 40px rgba(255,60,247,0.35), 0 0 34px rgba(0,247,255,0.25)'
             }}
           >
-            <div className="text-lg md:text-2xl font-bold ticker-glow">Cooldown Active</div>
-            <div className="mt-2 text-sm md:text-base">
-              Please wait{' '}
-              <span className="font-mono" style={{ color: 'var(--color-neon-yellow)' }}>{cooldown.toFixed(1)}s</span>
+            <div className="font-bold ticker-glow" style={{ fontSize: 'clamp(24px, 3.2vw, 40px)' }}>Cooldown Active</div>
+            <div className="mt-3" style={{ fontSize: 'clamp(18px, 2.4vw, 24px)' }}>
+              Please wait
+              <span className="font-mono" style={{ color: 'var(--color-neon-yellow)', marginLeft: 8 }}>
+                {cooldown.toFixed(1)}s
+              </span>
             </div>
           </div>
         </div>
