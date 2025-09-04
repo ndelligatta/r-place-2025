@@ -155,7 +155,7 @@ function TutorialCard() {
             <ul style={{ margin: 0, paddingLeft: '1.1em', lineHeight: 1.35 }}>
               <li>Select a color from the palette</li>
               <li>Click a pixel on the board to paint</li>
-              <li>Scroll to zoom, drag to pan</li>
+              <li>Grid is fixed for precision (no zoom)</li>
               <li>Wait for cooldown before placing again</li>
               <li>Your moves sync live for everyone</li>
             </ul>

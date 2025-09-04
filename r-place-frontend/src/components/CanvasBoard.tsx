@@ -24,7 +24,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     } catch {}
     return initial ? initial.slice() : new Uint16Array(size * size)
   })
-  const [scale, setScale] = useState(6)
+  const [scale, setScale] = useState(4)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const [last, setLast] = useState({ x: 0, y: 0 })
@@ -182,21 +182,18 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       }
     }
 
-    // Grid lines when zoomed
-    if (scale >= 8) {
-      const alpha = Math.min(0.22, 0.06 + (scale - 8) * 0.02)
-      ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`
-      ctx.lineWidth = Math.min(2, Math.max(1, Math.floor(scale / 8)))
-      for (let y = 0; y <= dims.height; y++) {
-        const yy = Math.floor(y * scale + offset.y) + 0.5
-        if (yy < 0 || yy > h) continue
-        ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke()
-      }
-      for (let x = 0; x <= dims.width; x++) {
-        const xx = Math.floor(x * scale + offset.x) + 0.5
-        if (xx < 0 || xx > w) continue
-        ctx.beginPath(); ctx.moveTo(xx, 0); ctx.lineTo(xx, h); ctx.stroke()
-      }
+    // Grid lines: always visible and higher contrast
+    ctx.strokeStyle = 'rgba(255,255,255,0.28)'
+    ctx.lineWidth = 1
+    for (let y = 0; y <= dims.height; y++) {
+      const yy = Math.floor(y * scale + offset.y) + 0.5
+      if (yy < 0 || yy > h) continue
+      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke()
+    }
+    for (let x = 0; x <= dims.width; x++) {
+      const xx = Math.floor(x * scale + offset.x) + 0.5
+      if (xx < 0 || xx > w) continue
+      ctx.beginPath(); ctx.moveTo(xx, 0); ctx.lineTo(xx, h); ctx.stroke()
     }
 
   }, [data, offset, scale, palette, dims.height, dims.width, tick])
@@ -214,40 +211,12 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     return () => clearTimeout(id)
   }, [data])
 
-  // Handle wheel with a non-passive listener so preventDefault works without warnings
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const handler = (ev: WheelEvent) => {
-      if (ev.cancelable) ev.preventDefault()
-      const rect = canvas.getBoundingClientRect()
-      const mx = ev.clientX - rect.left
-      const my = ev.clientY - rect.top
-      const delta = -Math.sign(ev.deltaY) * 1
-      setScale((prev) => {
-        const newScale = Math.min(40, Math.max(2, prev + delta))
-        const factor = newScale / prev
-        setOffset((o) => ({ x: mx - (mx - o.x) * factor, y: my - (my - o.y) * factor }))
-        return newScale
-      })
-    }
-    canvas.addEventListener('wheel', handler, { passive: false })
-    return () => canvas.removeEventListener('wheel', handler as EventListener)
-  }, [])
+  // Disable zoom: wheel handler removed
+  useEffect(() => {}, [])
 
-  function onPointerDown(e: React.PointerEvent) {
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-    setIsPanning(true)
-    setLast({ x: e.clientX, y: e.clientY })
-  }
-  function onPointerMove(e: React.PointerEvent) {
-    if (!isPanning) return
-    const dx = e.clientX - last.x
-    const dy = e.clientY - last.y
-    setLast({ x: e.clientX, y: e.clientY })
-    setOffset((o) => ({ x: o.x + dx, y: o.y + dy }))
-  }
-  function onPointerUp() { setIsPanning(false) }
+  function onPointerDown(_e: React.PointerEvent) {}
+  function onPointerMove(_e: React.PointerEvent) {}
+  function onPointerUp() {}
 
   function canvasToCell(clientX: number, clientY: number) {
     const canvas = canvasRef.current!
@@ -294,9 +263,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <span className="opacity-70">zoom</span>
-          <span className="font-mono">{scale}x</span>
+      <div className="flex items-center gap-2">
+          <span className="opacity-70">grid</span>
+          <span className="font-mono">fixed</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="opacity-70">cooldown</span>
