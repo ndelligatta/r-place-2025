@@ -58,19 +58,19 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
 
       {cooldown > 0 ? (
         <div
-          className="absolute inset-0 z-10 p-4 md:p-6"
+          className="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-6"
           style={{
             background: 'rgba(0,0,0,0.55)',
             backdropFilter: 'blur(8px) saturate(120%)',
           }}
         >
           <div
-            className="text-center neon-pulse absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="text-center neon-pulse"
             style={{
               border: '1px solid rgba(255,255,255,0.22)',
               borderRadius: 16,
               padding: '28px 32px',
-              maxWidth: 620,
+              maxWidth: 'min(620px, 100%)',
               width: 'auto',
               minHeight: '180px',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
