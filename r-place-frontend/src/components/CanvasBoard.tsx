@@ -187,19 +187,24 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       }
     }
 
-    // Grid lines: always visible and higher contrast
+    // Grid lines: clipped to board extents for precise fit
     ctx.strokeStyle = 'rgba(255,255,255,0.35)'
     ctx.lineWidth = 1
     for (let y = 0; y <= dims.height; y++) {
       const yy = Math.floor(y * scale + originY) + 0.5
-      if (yy < 0 || yy > h) continue
-      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke()
+      if (yy < originY || yy > originY + boardH) continue
+      ctx.beginPath(); ctx.moveTo(originX, yy); ctx.lineTo(originX + boardW, yy); ctx.stroke()
     }
     for (let x = 0; x <= dims.width; x++) {
       const xx = Math.floor(x * scale + originX) + 0.5
-      if (xx < 0 || xx > w) continue
-      ctx.beginPath(); ctx.moveTo(xx, 0); ctx.lineTo(xx, h); ctx.stroke()
+      if (xx < originX || xx > originX + boardW) continue
+      ctx.beginPath(); ctx.moveTo(xx, originY); ctx.lineTo(xx, originY + boardH); ctx.stroke()
     }
+
+    // Board outline to match exact coordinate bounds
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(originX + 0.5, originY + 0.5, boardW, boardH)
 
   }, [data, scale, palette, dims.height, dims.width, tick])
 
@@ -283,7 +288,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         </div>
       </div>
 
-      <div className="relative w-full aspect-square overflow-hidden rounded-md neon-border interaction-surface">
+      <div className="relative w-full aspect-square overflow-hidden rounded-md interaction-surface">
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-crosshair bg-black/30"
@@ -292,7 +297,6 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           onPointerUp={onPointerUp}
           onClick={onClick}
         />
-        <div className="pointer-events-none absolute inset-0 border border-white/10"></div>
       </div>
 
       <div className="text-xs opacity-70">
