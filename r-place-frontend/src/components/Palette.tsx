@@ -5,6 +5,19 @@ type Props = {
   cooldown?: number
 }
 
+function hexToRGBA(hex: string, alpha: number) {
+  const m = hex.trim().match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+  if (!m) return `rgba(255,255,255,${alpha})`
+  let h = m[1]
+  if (h.length === 3) {
+    h = h.split('').map((ch) => ch + ch).join('')
+  }
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Props) {
   const selectedColor = colors[selected]
   return (
@@ -23,7 +36,9 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
           const style: React.CSSProperties = {
             backgroundColor: c,
             borderColor: 'rgba(255,255,255,0.12)',
-            boxShadow: isSelected ? '0 0 0 2px var(--color-neon-cyan), 0 0 18px rgba(0,247,255,0.45)' : '0 0 0 1px rgba(255,255,255,0.08) inset',
+            boxShadow: isSelected
+              ? `0 0 0 2px var(--color-neon-cyan), 0 0 18px rgba(0,247,255,0.45), 0 0 14px ${hexToRGBA(c, 0.65)}, 0 0 28px ${hexToRGBA(c, 0.35)}`
+              : `0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 10px ${hexToRGBA(c, 0.25)}`,
           }
           return (
             <button
@@ -43,20 +58,20 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
 
       {cooldown > 0 ? (
         <div
-          className="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-6"
+          className="absolute inset-0 z-10 p-4 md:p-6"
           style={{
             background: 'rgba(0,0,0,0.55)',
             backdropFilter: 'blur(8px) saturate(120%)',
           }}
         >
           <div
-            className="text-center neon-pulse"
+            className="text-center neon-pulse absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{
               border: '1px solid rgba(255,255,255,0.22)',
               borderRadius: 16,
               padding: '28px 32px',
-              maxWidth: 'min(620px, 100%)',
-              width: '100%',
+              maxWidth: 620,
+              width: 'auto',
               minHeight: '180px',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
               boxShadow: '0 0 40px rgba(255,60,247,0.35), 0 0 34px rgba(0,247,255,0.25)'
