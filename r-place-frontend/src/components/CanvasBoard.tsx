@@ -199,7 +199,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       ctx.beginPath(); ctx.moveTo(xx, 0); ctx.lineTo(xx, h); ctx.stroke()
     }
 
-  }, [data, offset, scale, palette, dims.height, dims.width, tick])
+  }, [data, scale, palette, dims.height, dims.width, tick])
 
   // Persist board to localStorage (debounced)
   useEffect(() => {
