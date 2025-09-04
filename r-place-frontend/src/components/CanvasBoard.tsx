@@ -25,7 +25,6 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     } catch {}
     return initial ? initial.slice() : new Uint16Array(size * size)
   })
-  const scale = 16
   const [cooldown, setCooldown] = useState(0)
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
@@ -162,16 +161,14 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     const w = Math.floor(rect.width)
     const h = Math.floor(rect.height)
 
-    // Center the board within the canvas
-    const px = Math.max(1, scale)
-    const boardW = dims.width * px
-    const boardH = dims.height * px
-    const originX = Math.floor((w - boardW) / 2)
-    const originY = Math.floor((h - boardH) / 2)
+    // Fit board to container: compute per-axis pixel size and draw from (0,0)
+    const pxX = w / dims.width
+    const pxY = h / dims.height
+    const originX = 0
+    const originY = 0
 
-    // Clear bg
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(0, 0, w, h)
+    // Clear to transparent
+    ctx.clearRect(0, 0, w, h)
 
     // Draw pixels
     for (let y = 0; y < dims.height; y++) {
@@ -179,11 +176,13 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         const idx = y * dims.width + x
         const colorIndex = data[idx] ?? 0
         const color = palette[colorIndex] ?? '#000'
-        const sx = Math.floor(x * px + originX)
-        const sy = Math.floor(y * px + originY)
-        if (sx + px < 0 || sy + px < 0 || sx > w || sy > h) continue
+        const sx = Math.floor(x * pxX + originX)
+        const sy = Math.floor(y * pxY + originY)
+        const cw = Math.ceil(pxX)
+        const ch = Math.ceil(pxY)
+        if (sx + cw < 0 || sy + ch < 0 || sx > w || sy > h) continue
         ctx.fillStyle = color
-        ctx.fillRect(sx, sy, px, px)
+        ctx.fillRect(sx, sy, cw, ch)
       }
     }
 
@@ -191,22 +190,20 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     ctx.strokeStyle = 'rgba(255,255,255,0.35)'
     ctx.lineWidth = 1
     for (let y = 0; y <= dims.height; y++) {
-      const yy = Math.floor(y * scale + originY) + 0.5
-      if (yy < originY || yy > originY + boardH) continue
-      ctx.beginPath(); ctx.moveTo(originX, yy); ctx.lineTo(originX + boardW, yy); ctx.stroke()
+      const yy = Math.floor(y * pxY + originY) + 0.5
+      ctx.beginPath(); ctx.moveTo(originX, yy); ctx.lineTo(originX + w, yy); ctx.stroke()
     }
     for (let x = 0; x <= dims.width; x++) {
-      const xx = Math.floor(x * scale + originX) + 0.5
-      if (xx < originX || xx > originX + boardW) continue
-      ctx.beginPath(); ctx.moveTo(xx, originY); ctx.lineTo(xx, originY + boardH); ctx.stroke()
+      const xx = Math.floor(x * pxX + originX) + 0.5
+      ctx.beginPath(); ctx.moveTo(xx, originY); ctx.lineTo(xx, originY + h); ctx.stroke()
     }
 
     // Board outline to match exact coordinate bounds
     ctx.strokeStyle = 'rgba(255,255,255,0.18)'
     ctx.lineWidth = 1
-    ctx.strokeRect(originX + 0.5, originY + 0.5, boardW, boardH)
+    ctx.strokeRect(originX + 0.5, originY + 0.5, w - 1, h - 1)
 
-  }, [data, scale, palette, dims.height, dims.width, tick])
+  }, [data, palette, dims.height, dims.width, tick])
 
   // Persist board to localStorage (debounced)
   useEffect(() => {
@@ -231,13 +228,10 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   function canvasToCell(clientX: number, clientY: number) {
     const canvas = canvasRef.current!
     const rect = canvas.getBoundingClientRect()
-    const px = Math.max(1, scale)
-    const boardW = dims.width * px
-    const boardH = dims.height * px
-    const originX = Math.floor((rect.width - boardW) / 2)
-    const originY = Math.floor((rect.height - boardH) / 2)
-    const x = Math.floor((clientX - rect.left - originX) / scale)
-    const y = Math.floor((clientY - rect.top - originY) / scale)
+    const pxX = rect.width / dims.width
+    const pxY = rect.height / dims.height
+    const x = Math.floor((clientX - rect.left) / pxX)
+    const y = Math.floor((clientY - rect.top) / pxY)
     return { x, y }
   }
 
@@ -291,7 +285,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       <div className="relative w-full aspect-square overflow-hidden rounded-md interaction-surface">
         <canvas
           ref={canvasRef}
-          className="w-full h-full cursor-crosshair bg-black/30"
+          className="w-full h-full cursor-crosshair"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
