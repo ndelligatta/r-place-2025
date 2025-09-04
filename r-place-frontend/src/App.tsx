@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import TickerBar from './components/TickerBar'
 import CanvasBoard from './components/CanvasBoard'
 import Palette from './components/Palette'
