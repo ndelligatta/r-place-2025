@@ -100,6 +100,12 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial }: P
         if (!cancelled && row && row.data) {
           const decoded = decodeBoard(row.data as unknown as string)
           if (decoded && decoded.length === size * size) setData(decoded)
+        } else if (!cancelled) {
+          // Initialize server snapshot from current local state if server is empty
+          try {
+            const payload = { id: 1, data: encodeBoard(data) }
+            await supabase.from('boards').upsert(payload)
+          } catch {}
         }
         if (error) {
           // ignore: table may not exist yet
