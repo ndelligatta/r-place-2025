@@ -18,7 +18,7 @@ export default function OnboardingDemo() {
     const swatch = document.querySelector('[data-demo-swatch="true"]') as HTMLElement | null
     const canvas = document.querySelector('[data-board-canvas="true"]') as HTMLElement | null
     if (!swatch || !canvas) return
-    const sRect = swatch.getBoundingClientRect()
+    // compute target swatch rect (we may use the one below selected)
     // Try target swatch below the selected
     let targetSwatch: HTMLElement = swatch
     const idxStr = swatch.getAttribute('data-swatch-index')

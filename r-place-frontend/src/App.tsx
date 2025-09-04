@@ -70,17 +70,10 @@ export default function App() {
       <TickerBar />
 
       <header className="sticky top-0 z-20 panel glow-cyan">
-        <div className="mx-auto max-w-[1200px] px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 md:h-12 md:w-12 rounded-full glow-magenta" style={{ backgroundColor: 'var(--color-neon-magenta)' }} />
-            <h1 className="text-2xl md:text-4xl font-bold tracking-wide ticker-glow">
-              r/place 2025
-            </h1>
-          </div>
-          <div className="hidden md:flex items-center gap-2 text-xs opacity-80">
-            <span className="px-2 py-1 rounded neon-border">onchain: soon™</span>
-            <span className="px-2 py-1 rounded neon-border">anti-grief: vibes-based</span>
-          </div>
+        <div className="mx-auto max-w-[1200px] px-4 py-4 flex items-center justify-center text-center">
+          <h1 className="epic-title" style={{ fontSize: 'clamp(28px, 6vw, 56px)' }}>
+            r/place 2025
+          </h1>
         </div>
       </header>
 
@@ -102,7 +95,7 @@ export default function App() {
           className="panel neon-3d rounded-lg p-4 glow-magenta w-[420px] shrink-0 flex flex-col"
           style={{ height: asideHeight ? `${asideHeight}px` : undefined }}
         >
-          <h2 className="text-lg font-semibold mb-3">Palette</h2>
+          <h2 className="section-title mb-4">Palette</h2>
           <div className="flex-1 min-h-0">
             <Palette colors={palette} selected={selected} onSelect={setSelected} cooldown={cooldown} />
           </div>
