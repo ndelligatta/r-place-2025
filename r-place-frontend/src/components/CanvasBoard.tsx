@@ -24,8 +24,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     } catch {}
     return initial ? initial.slice() : new Uint16Array(size * size)
   })
-  const scale = 4
-  const offset = { x: 0, y: 0 }
+  const scale = 3
   const [cooldown, setCooldown] = useState(0)
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
@@ -161,19 +160,25 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     const w = canvas.width
     const h = canvas.height
 
+    // Center the board within the canvas
+    const px = Math.max(1, scale)
+    const boardW = dims.width * px
+    const boardH = dims.height * px
+    const originX = Math.floor((w - boardW) / 2)
+    const originY = Math.floor((h - boardH) / 2)
+
     // Clear bg
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, w, h)
 
     // Draw pixels
-    const px = Math.max(1, scale)
     for (let y = 0; y < dims.height; y++) {
       for (let x = 0; x < dims.width; x++) {
         const idx = y * dims.width + x
         const colorIndex = data[idx] ?? 0
         const color = palette[colorIndex] ?? '#000'
-        const sx = Math.floor(x * px + offset.x)
-        const sy = Math.floor(y * px + offset.y)
+        const sx = Math.floor(x * px + originX)
+        const sy = Math.floor(y * px + originY)
         if (sx + px < 0 || sy + px < 0 || sx > w || sy > h) continue
         ctx.fillStyle = color
         ctx.fillRect(sx, sy, px, px)
@@ -181,15 +186,15 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     }
 
     // Grid lines: always visible and higher contrast
-    ctx.strokeStyle = 'rgba(255,255,255,0.28)'
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'
     ctx.lineWidth = 1
     for (let y = 0; y <= dims.height; y++) {
-      const yy = Math.floor(y * scale + offset.y) + 0.5
+      const yy = Math.floor(y * scale + originY) + 0.5
       if (yy < 0 || yy > h) continue
       ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke()
     }
     for (let x = 0; x <= dims.width; x++) {
-      const xx = Math.floor(x * scale + offset.x) + 0.5
+      const xx = Math.floor(x * scale + originX) + 0.5
       if (xx < 0 || xx > w) continue
       ctx.beginPath(); ctx.moveTo(xx, 0); ctx.lineTo(xx, h); ctx.stroke()
     }
@@ -219,8 +224,13 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   function canvasToCell(clientX: number, clientY: number) {
     const canvas = canvasRef.current!
     const rect = canvas.getBoundingClientRect()
-    const x = Math.floor((clientX - rect.left - offset.x) / scale)
-    const y = Math.floor((clientY - rect.top - offset.y) / scale)
+    const px = Math.max(1, scale)
+    const boardW = dims.width * px
+    const boardH = dims.height * px
+    const originX = Math.floor((rect.width - boardW) / 2)
+    const originY = Math.floor((rect.height - boardH) / 2)
+    const x = Math.floor((clientX - rect.left - originX) / scale)
+    const y = Math.floor((clientY - rect.top - originY) / scale)
     return { x, y }
   }
 
