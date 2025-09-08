@@ -176,7 +176,6 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         const state = channel.presenceState() as Record<string, any[]>
         const list: Array<{ key: string; meta: any }> = []
         for (const [key, metas] of Object.entries(state)) {
-          if (key === (presenceKey || 'anon')) continue // exclude self to avoid 0↔1 flicker
           const last = metas && metas.length ? metas[metas.length - 1] : null
           if (last) list.push({ key, meta: last })
         }
