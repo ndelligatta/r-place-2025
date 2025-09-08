@@ -22,7 +22,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
           const isSelected = i === selected
           const style: React.CSSProperties = { backgroundColor: c }
           const base = 'relative h-16 rounded-md flex items-center justify-center border border-white/10 transform-gpu transition-none select-none shrink-0 overflow-hidden'
-          const selectedCls = isSelected ? ' ring-2 ring-cyan-300 shadow-lg' : ' ring-0 shadow-none'
+          const selectedCls = isSelected ? ' ring-4 ring-cyan-300' : ''
           return (
             <button
               key={i}

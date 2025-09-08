@@ -58,6 +58,26 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     }
   }
 
+  function encodeOwners(arr: Array<string | null>): string {
+    const map: Record<number, string> = {}
+    for (let i = 0; i < arr.length; i++) if (arr[i]) map[i] = arr[i] as string
+    try { return JSON.stringify(map) } catch { return '{}' }
+  }
+  function decodeOwners(json: unknown, pixelCount: number): Array<string | null> | null {
+    if (!json) return null
+    try {
+      const obj = typeof json === 'string' ? JSON.parse(json) : json
+      const next = new Array(pixelCount).fill(null) as Array<string | null>
+      for (const k in obj as any) {
+        const idx = Number(k)
+        if (!Number.isFinite(idx) || idx < 0 || idx >= pixelCount) continue
+        const v = (obj as any)[k]
+        if (typeof v === 'string' && v) next[idx] = v
+      }
+      return next
+    } catch { return null }
+  }
+
   // Cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return
@@ -126,7 +146,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       try {
         const { data: row, error } = await supabase
           .from('boards')
-          .select('data')
+          .select('data, owners_json')
           .eq('id', boardId)
           .single()
         if (!cancelled && row && row.data) {
@@ -142,6 +162,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
               if (onStatusChange) onStatusChange({ supabase: true, boardSource: localHasColors ? 'local' : 'server' })
             }
           }
+          // Load owners snapshot if present
+          const ownersNext = decodeOwners((row as any).owners_json, size * size)
+          if (ownersNext) setOwners(ownersNext)
         }
         if (error) {
           // ignore: table may not exist yet
@@ -313,12 +336,10 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       nextState = next
       return next
     })
-    // Update owner locally
-    setOwners((arr) => {
-      const next = arr.slice()
-      next[idx] = ownerName || null
-      return next
-    })
+    // Update owner locally and prepare owners snapshot for persistence
+    const ownersNextLocal = owners.slice()
+    ownersNextLocal[idx] = ownerName || null
+    setOwners(ownersNextLocal)
     // Broadcast realtime update
     if (supabase && channelRef.current) {
       try {
@@ -336,7 +357,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     }
     // Persist board snapshot (simple last-write-wins)
     if (supabase && nextState) {
-    const payload = { id: boardId, data: encodeBoard(nextState) }
+      const payload: any = { id: boardId, data: encodeBoard(nextState), owners_json: encodeOwners(ownersNextLocal) }
       // Use then(success, failure) to avoid PromiseLike catch type issue in TS
       supabase.from('boards').upsert(payload).then(
         () => {
