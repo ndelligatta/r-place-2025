@@ -56,6 +56,9 @@ export default function App() {
 
   const [players, setPlayers] = useState<Array<{ key: string; meta: any }>>([])
 
+  // Stable presence meta to avoid resubscribe thrash
+  const presenceMetaMemo = useMemo(() => (me ? { name: me.name, color: me.color } : undefined), [me?.name, me?.color])
+
   useLayoutEffect(() => {
     const el = canvasPanelRef.current
     if (!el) return
@@ -96,7 +99,7 @@ export default function App() {
             onCooldownChange={setCooldown}
             boardId={boardId}
             presenceKey={me?.id}
-            presenceMeta={me ? { name: me.name, color: me.color } : undefined}
+            presenceMeta={presenceMetaMemo}
             onPlayersChange={setPlayers}
             ownerName={me?.name}
           />

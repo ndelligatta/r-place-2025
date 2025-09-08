@@ -190,7 +190,15 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       if (channelRef.current && supabase) supabase.removeChannel(channelRef.current)
       channelRef.current = null
     }
-  }, [supabase, size, boardId, presenceKey, presenceMeta])
+  }, [supabase, size, boardId, presenceKey])
+
+  // Update presence metadata without resubscribing the channel
+  useEffect(() => {
+    if (!supabase) return
+    const ch = channelRef.current
+    if (!ch) return
+    try { ch.track(presenceMeta || {}) } catch {}
+  }, [supabase, presenceMeta])
 
   // Draw
   useEffect(() => {
