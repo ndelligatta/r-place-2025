@@ -34,36 +34,24 @@ export default function App() {
   // Identity: prompt for name on first visit (no random names)
   const [me, setMe] = useState<{ id: string; name: string; color: string } | null>(() => {
     try {
-      const saved = localStorage.getItem('rplace_user_v1')
+      const saved = localStorage.getItem('rplace_profile_v2')
       if (saved) return JSON.parse(saved)
     } catch {}
     return null
   })
   const [showNamePrompt, setShowNamePrompt] = useState(() => {
     try {
-      const saved = localStorage.getItem('rplace_user_v1')
-      const confirmed = localStorage.getItem('rplace_name_confirmed_v2')
-      // Force a one-time prompt for all existing users (no flag existed before)
-      if (!saved) return true
-      if (!confirmed) return true
-      return false
+      const saved = localStorage.getItem('rplace_profile_v2')
+      return !saved
     } catch { return true }
   })
-  useEffect(() => {
-    try {
-      const confirmed = localStorage.getItem('rplace_name_confirmed_v2')
-      setShowNamePrompt(!me || !confirmed)
-    } catch { setShowNamePrompt(!me) }
-  }, [me])
+  useEffect(() => { setShowNamePrompt(!me) }, [me])
   function setName(name: string) {
     const id = me?.id || ('guest_' + Math.random().toString(36).slice(2, 10))
     const color = me?.color || DEFAULT_COLORS[(2 + Math.floor(Math.random() * (DEFAULT_COLORS.length - 2))) % DEFAULT_COLORS.length]
     const obj = { id, name, color }
     setMe(obj)
-    try {
-      localStorage.setItem('rplace_user_v1', JSON.stringify(obj))
-      localStorage.setItem('rplace_name_confirmed_v2', '1')
-    } catch {}
+    try { localStorage.setItem('rplace_profile_v2', JSON.stringify(obj)) } catch {}
   }
 
   const [players, setPlayers] = useState<Array<{ key: string; meta: any }>>([])
