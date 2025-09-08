@@ -140,7 +140,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           .select('idx, owner')
           .eq('board_id', boardId)
         if (!cancelled && Array.isArray(rows)) {
-          setOwners((prev) => {
+          setOwners(() => {
             const next = new Array(size * size).fill(null) as Array<string | null>
             for (const r of rows as Array<{ idx: number; owner: string | null }>) {
               if (typeof r.idx === 'number' && r.idx >= 0 && r.idx < next.length) next[r.idx] = r.owner ?? null
@@ -262,7 +262,6 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   useEffect(() => {}, [])
 
   function onPointerDown(_e: React.PointerEvent) {}
-  function onPointerMove(_e: React.PointerEvent) {}
   function onPointerUp() {}
 
   function canvasToCell(clientX: number, clientY: number) {

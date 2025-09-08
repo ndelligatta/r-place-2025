@@ -8,13 +8,11 @@ type Props = {
 
 export default function NamePrompt({ open, initialName, onSubmit }: Props) {
   const [name, setName] = useState(initialName || '')
-  const [dirty, setDirty] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
     setName(initialName || '')
-    setDirty(false)
     setError(null)
   }, [open, initialName])
 
@@ -39,7 +37,7 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
             style={{ borderColor: 'rgba(255,255,255,0.18)' }}
             placeholder="type your name"
             value={name}
-            onChange={(e) => { setDirty(true); setName(e.target.value) }}
+            onChange={(e) => { setName(e.target.value) }}
             onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
             autoFocus
             maxLength={40}
@@ -51,4 +49,3 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
     </div>
   )
 }
-
