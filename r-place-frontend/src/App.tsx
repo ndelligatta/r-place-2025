@@ -128,28 +128,13 @@ export default function App() {
               <span className="opacity-80">Canvas</span>
               <span className="font-mono">{size}×{size}</span>
             </div>
-            {players.length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {players.slice(0, 12).map((p, i) => (
-                  <span key={i} className="px-2 py-1 rounded text-[11px]" style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.12)'
-                  }}>
-                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 9999, background: p.meta?.color || '#888', marginRight: 6 }} />
-                    {p.meta?.name || p.key}
-                  </span>
-                ))}
-              </div>
-            ) : null}
           </div>
 
           {/* removed the connect wallet button per request */}
         </aside>
       </main>
 
-      <footer className="mx-auto max-w-[1200px] px-4 py-6 opacity-70 text-xs">
-        <span>made for the culture. mod it, fork it, paint it.</span>
-      </footer>
+      {/* footer removed per request */}
 
       {/* Connection badge removed per request */}
 
