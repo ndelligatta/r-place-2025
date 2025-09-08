@@ -57,8 +57,7 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
         <p className="text-sm opacity-80 mb-4">Show up on the canvas. Change anytime.</p>
         <div className="flex items-center gap-3">
           <input
-            className="flex-1 bg-transparent border rounded-md px-3 py-2 outline-none"
-            style={{ borderColor: 'rgba(255,255,255,0.18)' }}
+            className="flex-1 bg-transparent border rounded-md px-3 py-2 outline-none input-neon"
             placeholder="type your name"
             value={name}
             onChange={(e) => { setName(e.target.value) }}
