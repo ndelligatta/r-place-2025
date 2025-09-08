@@ -26,7 +26,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
             >
               {isSelected ? (
                 <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-black font-extrabold text-base drop-shadow-[0_0_18px_rgba(255,255,255,0.95)]">✓</span>
+                  <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white text-black font-extrabold text-3xl drop-shadow-xl">✓</span>
                 </span>
               ) : null}
             </button>
