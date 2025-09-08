@@ -344,13 +344,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     const { x, y } = canvasToCell(e.clientX, e.clientY)
     if (x < 0 || y < 0 || x >= dims.width || y >= dims.height) return
     const idx = y * dims.width + x
-    let nextState: Uint16Array | null = null
-    setData((arr) => {
-      const next = arr.slice()
-      next[idx] = selectedIndex
-      nextState = next
-      return next
-    })
+    const nextState = (() => { const next = data.slice(); next[idx] = selectedIndex; return next })()
+    setData(nextState)
     // Update owner locally and prepare owners snapshot for persistence
     const ownersNextLocal = owners.slice()
     ownersNextLocal[idx] = ownerName || null

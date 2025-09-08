@@ -26,7 +26,7 @@ export default function App() {
   const [selected, setSelected] = useState(2) // start spicy magenta
   const [cooldown, setCooldown] = useState(0)
   const size = 32
-  const boardId = 2
+  const boardId = 1
   const initial = useMemo(() => new Uint16Array(size * size).fill(0), [])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
   const [asideHeight, setAsideHeight] = useState<number | null>(null)

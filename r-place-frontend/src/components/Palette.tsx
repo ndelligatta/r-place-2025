@@ -6,17 +6,8 @@ type Props = {
 }
 
 export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Props) {
-  const selectedColor = colors[selected]
   return (
     <div className="flex flex-col gap-4 h-full min-h-0 relative">
-      <div className="rounded-md p-3 neon-border" style={{ borderColor: 'var(--color-neon-cyan)' }}>
-        <div className="flex items-center justify-between text-xs">
-          <span className="opacity-80">Selected</span>
-          <span className="font-mono" style={{ color: 'var(--color-neon-yellow)' }}>{selectedColor}</span>
-        </div>
-        <div className="mt-2 h-10 rounded-sm" style={{ background: selectedColor }} />
-      </div>
-
       <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 overflow-auto pr-1">
         {colors.map((c, i) => {
           const isSelected = i === selected
@@ -35,7 +26,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
             >
               {isSelected ? (
                 <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white text-black font-extrabold text-sm filter drop-shadow-[0_0_16px_rgba(255,255,255,0.9)]">✓</span>
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white text-black font-extrabold text-base drop-shadow-[0_0_18px_rgba(255,255,255,0.95)]">✓</span>
                 </span>
               ) : null}
             </button>
