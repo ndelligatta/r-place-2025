@@ -21,8 +21,8 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
         {colors.map((c, i) => {
           const isSelected = i === selected
           const style: React.CSSProperties = { backgroundColor: c }
-          const base = 'relative h-16 rounded-md flex items-center justify-center border border-white/10 transform-gpu transition-none select-none shrink-0 overflow-hidden'
-          const selectedCls = isSelected ? ' ring-4 ring-cyan-300' : ''
+          const base = 'relative h-16 rounded-md flex items-center justify-center border-4 transform-gpu transition-none select-none shrink-0 overflow-hidden border-transparent'
+          const selectedCls = isSelected ? ' border-white' : ''
           return (
             <button
               key={i}
@@ -32,7 +32,13 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
               style={style}
               data-demo-swatch={isSelected ? 'true' : undefined}
               data-swatch-index={i}
-            />
+            >
+              {isSelected ? (
+                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white text-black font-extrabold text-sm filter drop-shadow-[0_0_16px_rgba(255,255,255,0.9)]">✓</span>
+                </span>
+              ) : null}
+            </button>
           )
         })}
       </div>

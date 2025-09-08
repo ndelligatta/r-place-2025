@@ -144,11 +144,27 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     })()
     ;(async () => {
       try {
-        const { data: row, error } = await supabase
-          .from('boards')
-          .select('data, owners_json')
-          .eq('id', boardId)
-          .single()
+        let row: any | null = null
+        let error: any | null = null
+        {
+          const res: any = await supabase
+            .from('boards')
+            .select('data, owners_json')
+            .eq('id', boardId)
+            .single()
+          row = res?.data ?? null
+          error = res?.error ?? null
+        }
+        if (error) {
+          // Fallback for older schema without owners_json
+          const res2: any = await supabase
+            .from('boards')
+            .select('data')
+            .eq('id', boardId)
+            .single()
+          row = res2?.data ?? null
+          error = res2?.error ?? null
+        }
         if (!cancelled && row && row.data) {
           const decoded = decodeBoard(row.data as unknown as string)
           if (decoded && decoded.length === size * size) {
@@ -167,7 +183,6 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           if (ownersNext) setOwners(ownersNext)
         }
         if (error) {
-          // ignore: table may not exist yet
           if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local' })
         }
       } catch {}
@@ -357,16 +372,17 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     }
     // Persist board snapshot (simple last-write-wins)
     if (supabase && nextState) {
-      const payload: any = { id: boardId, data: encodeBoard(nextState), owners_json: encodeOwners(ownersNextLocal) }
-      // Use then(success, failure) to avoid PromiseLike catch type issue in TS
-      supabase.from('boards').upsert(payload).then(
-        () => {
-          if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'server' })
-        },
-        (err) => {
-          if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local', lastPersistError: String(err && (err.message || err)) })
+      const payloadWithOwners: any = { id: boardId, data: encodeBoard(nextState), owners_json: encodeOwners(ownersNextLocal) }
+      const payloadNoOwners: any = { id: boardId, data: encodeBoard(nextState) }
+      supabase.from('boards').upsert(payloadWithOwners).then(async (res: any) => {
+        if (res?.error && String(res.error.message || res.error).includes('owners_json')) {
+          await supabase.from('boards').upsert(payloadNoOwners)
         }
-      )
+      }).then(() => {
+        if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'server' })
+      }, (err) => {
+        if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local', lastPersistError: String(err && (err.message || err)) })
+      })
       // Persist owner mapping for this pixel
       supabase.from('pixel_owners' as any).upsert({ board_id: boardId, idx, owner: ownerName || null, color_idx: selectedIndex }).then(
         () => {},
@@ -410,18 +426,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="opacity-70">grid</span>
-            <span className="font-mono">fixed</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="opacity-70">selected</span>
-            <span className="inline-flex items-center gap-2">
-              <span className="w-3.5 h-3.5 rounded-sm border border-white/20" style={{ background: palette[selectedIndex] }} />
-              <span className="font-mono opacity-80">{palette[selectedIndex]}</span>
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="opacity-70">grid</span>
+          <span className="font-mono">fixed</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="opacity-70">cooldown</span>
