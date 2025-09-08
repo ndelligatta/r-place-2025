@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 type Props = {
   open: boolean
@@ -32,14 +33,14 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
   }
 
   if (!open) return null
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 grid place-items-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)', zIndex: 9999 }}
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)', zIndex: 2147483647 }}
       role="dialog"
       aria-modal="true"
     >
-      <div className="panel neon-3d glow-magenta w-full max-w-[480px] rounded-xl p-6">
+      <div className="panel neon-3d glow-magenta w-full max-w-[520px] rounded-xl p-6">
         <div className="mb-3">
           <div className="section-title">Choose your name</div>
         </div>
@@ -59,6 +60,7 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
         </div>
         {error ? <div className="mt-2 text-xs" style={{ color: 'var(--color-neon-yellow)' }}>{error}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
