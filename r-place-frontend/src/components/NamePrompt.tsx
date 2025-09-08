@@ -16,6 +16,14 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
     setError(null)
   }, [open, initialName])
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [open])
+
   function submit() {
     const n = (name || '').trim()
     if (n.length < 2) { setError('name too short'); return }
@@ -25,8 +33,13 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
 
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.55)' }}>
-      <div className="panel neon-3d glow-magenta w-full max-w-[440px] rounded-xl p-5">
+    <div
+      className="fixed inset-0 grid place-items-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)', zIndex: 9999 }}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="panel neon-3d glow-magenta w-full max-w-[480px] rounded-xl p-6">
         <div className="mb-3">
           <div className="section-title">Choose your name</div>
         </div>
