@@ -12,9 +12,10 @@ type Props = {
   presenceKey?: string
   presenceMeta?: Record<string, any>
   onPlayersChange?: (players: Array<{ key: string; meta: any }>) => void
+  ownerName?: string
 }
 
-export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange }: Props) {
+export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange, ownerName }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => {
     try {
@@ -31,6 +32,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   const [cooldown, setCooldown] = useState(0)
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
+  const [owners, setOwners] = useState<Array<string | null>>(() => new Array(size * size).fill(null))
   useEffect(() => {
     if (onStatusChange) onStatusChange({ supabase: !!supabase, boardSource: null })
   }, [!!supabase])
@@ -96,7 +98,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     }
   }, [])
 
-  // Supabase: load initial board and subscribe to realtime pixel updates
+  // Supabase: load initial board and owners; subscribe to realtime pixel updates
   useEffect(() => {
     if (!supabase) return
     let cancelled = false
@@ -130,11 +132,28 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local' })
         }
       } catch {}
+
+      // Load owners map for this board (optional; ignore errors)
+      try {
+        const { data: rows } = await supabase
+          .from('pixel_owners' as any)
+          .select('idx, owner')
+          .eq('board_id', boardId)
+        if (!cancelled && Array.isArray(rows)) {
+          setOwners((prev) => {
+            const next = new Array(size * size).fill(null) as Array<string | null>
+            for (const r of rows as Array<{ idx: number; owner: string | null }>) {
+              if (typeof r.idx === 'number' && r.idx >= 0 && r.idx < next.length) next[r.idx] = r.owner ?? null
+            }
+            return next
+          })
+        }
+      } catch {}
     })()
     const channel = supabase
       .channel(`board-${boardId}`, { config: { broadcast: { self: false }, presence: { key: presenceKey || 'anon' } } })
       .on('broadcast', { event: 'pixel' }, (payload: any) => {
-        const p = payload?.payload as { x: number; y: number; colorIndex: number } | undefined
+        const p = payload?.payload as { x: number; y: number; colorIndex: number; owner?: string | null } | undefined
         if (!p) return
         const { x, y, colorIndex } = p
         if (x < 0 || y < 0 || x >= size || y >= size) return
@@ -143,6 +162,11 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           if (arr[idx] === colorIndex) return arr
           const next = arr.slice()
           next[idx] = colorIndex
+          return next
+        })
+        setOwners((arr) => {
+          const next = arr.slice()
+          next[idx] = (payload?.payload?.owner ?? null) as any
           return next
         })
       })
@@ -165,7 +189,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       if (channelRef.current && supabase) supabase.removeChannel(channelRef.current)
       channelRef.current = null
     }
-  }, [supabase, size, boardId, presenceKey])
+  }, [supabase, size, boardId, presenceKey, presenceMeta])
 
   // Draw
   useEffect(() => {
@@ -266,10 +290,16 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       nextState = next
       return next
     })
+    // Update owner locally
+    setOwners((arr) => {
+      const next = arr.slice()
+      next[idx] = ownerName || null
+      return next
+    })
     // Broadcast realtime update
     if (supabase && channelRef.current) {
       try {
-        channelRef.current.send({ type: 'broadcast', event: 'pixel', payload: { x, y, colorIndex: selectedIndex } })
+        channelRef.current.send({ type: 'broadcast', event: 'pixel', payload: { x, y, colorIndex: selectedIndex, owner: ownerName || null } })
       } catch {}
     }
     // Persist board snapshot (simple last-write-wins)
@@ -284,8 +314,28 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local', lastPersistError: String(err && (err.message || err)) })
         }
       )
+      // Persist owner mapping for this pixel
+      supabase.from('pixel_owners' as any).upsert({ board_id: boardId, idx, owner: ownerName || null, color_idx: selectedIndex }).then(
+        () => {},
+        () => {}
+      )
     }
     setCooldown(3) // seconds
+  }
+
+  // Update canvas title on hover to show owner/no owner (minimal UI)
+  function onPointerMove(e: React.PointerEvent) {
+    const { x, y } = canvasToCell(e.clientX, e.clientY)
+    if (x < 0 || y < 0 || x >= dims.width || y >= dims.height) {
+      if (canvasRef.current) canvasRef.current.title = ''
+      return
+    }
+    const idx = y * dims.width + x
+    const owner = owners[idx]
+    if (canvasRef.current) canvasRef.current.title = owner ? String(owner) : 'no owner'
+  }
+  function onPointerLeave() {
+    if (canvasRef.current) canvasRef.current.title = ''
   }
 
   return (
@@ -308,6 +358,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           data-board-canvas="true"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
+          onPointerLeave={onPointerLeave}
           onPointerUp={onPointerUp}
           onClick={onClick}
         />

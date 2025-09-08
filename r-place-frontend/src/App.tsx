@@ -6,6 +6,7 @@ import BackgroundShader from './components/BackgroundShader'
 import { useMemo as useMemo2 } from 'react'
 import OnboardingDemo from './components/OnboardingDemo'
 import DemoCta from './components/DemoCta'
+import NamePrompt from './components/NamePrompt'
 
 const DEFAULT_COLORS = [
   // bases
@@ -31,19 +32,23 @@ export default function App() {
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
   const [asideHeight, setAsideHeight] = useState<number | null>(null)
 
-  // Generate guest identity once
-  const me = useMemo2(() => {
+  // Identity: prompt for name on first visit (no random names)
+  const [me, setMe] = useState<{ id: string; name: string; color: string } | null>(() => {
     try {
       const saved = localStorage.getItem('rplace_user_v1')
       if (saved) return JSON.parse(saved)
     } catch {}
-    const id = 'guest_' + Math.random().toString(36).slice(2, 8)
-    const name = 'Guest ' + Math.floor(1000 + Math.random() * 9000)
-    const color = DEFAULT_COLORS[(2 + Math.floor(Math.random() * (DEFAULT_COLORS.length - 2))) % DEFAULT_COLORS.length]
+    return null
+  })
+  const [showNamePrompt, setShowNamePrompt] = useState(() => !me)
+  useEffect(() => { setShowNamePrompt(!me) }, [me])
+  function setName(name: string) {
+    const id = me?.id || ('guest_' + Math.random().toString(36).slice(2, 10))
+    const color = me?.color || DEFAULT_COLORS[(2 + Math.floor(Math.random() * (DEFAULT_COLORS.length - 2))) % DEFAULT_COLORS.length]
     const obj = { id, name, color }
+    setMe(obj)
     try { localStorage.setItem('rplace_user_v1', JSON.stringify(obj)) } catch {}
-    return obj
-  }, [])
+  }
 
   const [players, setPlayers] = useState<Array<{ key: string; meta: any }>>([])
 
@@ -86,9 +91,10 @@ export default function App() {
             initial={initial}
             onCooldownChange={setCooldown}
             boardId={boardId}
-            presenceKey={me.id}
-            presenceMeta={{ name: me.name, color: me.color }}
+            presenceKey={me?.id}
+            presenceMeta={me ? { name: me.name, color: me.color } : undefined}
             onPlayersChange={setPlayers}
+            ownerName={me?.name}
           />
         </div>
         <aside
@@ -142,6 +148,9 @@ export default function App() {
       <TutorialCard />
       <DemoCta />
       <OnboardingDemo />
+
+      {/* Name prompt overlay */}
+      <NamePrompt open={showNamePrompt} initialName={me?.name} onSubmit={setName} />
     </div>
   )
 }
