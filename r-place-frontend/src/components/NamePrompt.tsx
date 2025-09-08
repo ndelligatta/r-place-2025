@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
 
 type Props = {
   open: boolean
@@ -33,12 +32,23 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
   }
 
   if (!open) return null
-  return createPortal(
+  return (
     <div
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)', zIndex: 2147483647 }}
       role="dialog"
       aria-modal="true"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        background: 'rgba(0,0,0,0.6)',
+        zIndex: 2147483647,
+      }}
     >
       <div className="panel neon-3d glow-magenta w-full max-w-[520px] rounded-xl p-6">
         <div className="mb-3">
@@ -60,7 +70,6 @@ export default function NamePrompt({ open, initialName, onSubmit }: Props) {
         </div>
         {error ? <div className="mt-2 text-xs" style={{ color: 'var(--color-neon-yellow)' }}>{error}</div> : null}
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }
