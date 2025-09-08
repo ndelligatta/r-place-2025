@@ -389,9 +389,18 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-xs">
-      <div className="flex items-center gap-2">
-          <span className="opacity-70">grid</span>
-          <span className="font-mono">fixed</span>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="opacity-70">grid</span>
+            <span className="font-mono">fixed</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="opacity-70">selected</span>
+            <span className="inline-flex items-center gap-2">
+              <span className="w-3.5 h-3.5 rounded-sm border border-white/20" style={{ background: palette[selectedIndex] }} />
+              <span className="font-mono opacity-80">{palette[selectedIndex]}</span>
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="opacity-70">cooldown</span>
