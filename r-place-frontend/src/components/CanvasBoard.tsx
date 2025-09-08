@@ -33,6 +33,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
   const [owners, setOwners] = useState<Array<string | null>>(() => new Array(size * size).fill(null))
+  const activeRef = useRef<Map<string, { key: string; meta: any; last: number }>>(new Map())
   const [tooltip, setTooltip] = useState<{ show: boolean; x: number; y: number; text: string } | null>(null)
   useEffect(() => {
     if (onStatusChange) onStatusChange({ supabase: !!supabase, boardSource: null })
@@ -98,6 +99,20 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       window.removeEventListener('resize', onResize)
     }
   }, [])
+
+  // Helper: emit current active list based on recent pixel placements
+  function emitActivePlayers() {
+    if (!onPlayersChange) return
+    const now = Date.now()
+    const ACTIVE_MS = 3 * 60 * 1000 // 3 minutes window
+    for (const [k, v] of activeRef.current) {
+      if (now - v.last > ACTIVE_MS) activeRef.current.delete(k)
+    }
+    const list = Array.from(activeRef.current.values())
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .map(({ key, meta }) => ({ key, meta }))
+    onPlayersChange(list)
+  }
 
   // Supabase: load initial board and owners; subscribe to realtime pixel updates
   useEffect(() => {
@@ -171,17 +186,15 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           return next
         })
       })
-      .on('presence', { event: 'sync' }, () => {
-        if (!onPlayersChange) return
-        const state = channel.presenceState() as Record<string, any[]>
-        const list: Array<{ key: string; meta: any }> = []
-        for (const [key, metas] of Object.entries(state)) {
-          const last = metas && metas.length ? metas[metas.length - 1] : null
-          if (last) list.push({ key, meta: last })
-        }
-        list.sort((a, b) => a.key.localeCompare(b.key))
-        onPlayersChange(list)
+      .on('broadcast', { event: 'active' }, (payload: any) => {
+        const p = payload?.payload as { key?: string; meta?: any } | undefined
+        const key = (p?.key || (presenceKey || 'anon')) as string
+        const meta = p?.meta ?? presenceMeta ?? {}
+        const now = Date.now()
+        activeRef.current.set(key, { key, meta, last: now })
+        emitActivePlayers()
       })
+      // Presence kept for connection state only; player list derives from recent activity
       .subscribe()
     channelRef.current = channel
 
@@ -310,7 +323,16 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     if (supabase && channelRef.current) {
       try {
         channelRef.current.send({ type: 'broadcast', event: 'pixel', payload: { x, y, colorIndex: selectedIndex, owner: ownerName || null } })
+        // Mark this user as active for the recent window
+        channelRef.current.send({ type: 'broadcast', event: 'active', payload: { key: presenceKey || 'anon', meta: presenceMeta || {} } })
       } catch {}
+    }
+    // Update local active list immediately (no wait for round-trip)
+    {
+      const key = (presenceKey || 'anon') as string
+      const meta = presenceMeta || {}
+      activeRef.current.set(key, { key, meta, last: Date.now() })
+      emitActivePlayers()
     }
     // Persist board snapshot (simple last-write-wins)
     if (supabase && nextState) {
@@ -332,6 +354,12 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     }
     setCooldown(3) // seconds
   }
+
+  // Periodically prune stale active entries (no DB, no timers elsewhere)
+  useEffect(() => {
+    const id = setInterval(() => emitActivePlayers(), 5000)
+    return () => clearInterval(id)
+  }, [onPlayersChange])
 
   // Update canvas title on hover to show owner/no owner (minimal UI)
   function onPointerMove(e: React.PointerEvent) {
