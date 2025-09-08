@@ -82,10 +82,19 @@ export default function App() {
       <TickerBar />
 
       <header className="sticky top-0 z-20 panel glow-cyan">
-        <div className="mx-auto max-w-[1200px] px-4 py-4 flex items-center justify-center text-center">
-          <h1 className="epic-title" style={{ fontSize: 'clamp(28px, 6vw, 56px)' }}>
-            r/place '25
-          </h1>
+        <div className="mx-auto max-w-[1200px] px-4 py-4 relative">
+          <div className="flex items-center justify-center text-center">
+            <h1 className="epic-title" style={{ fontSize: 'clamp(28px, 6vw, 56px)' }}>
+              r/place '25
+            </h1>
+          </div>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-xs">
+            <span className="opacity-70">selected</span>
+            <span className="inline-flex items-center gap-2">
+              <span className="w-3.5 h-3.5 rounded-sm border border-white/20" style={{ background: palette[selected] }} />
+              <span className="font-mono opacity-80 hidden sm:inline">{palette[selected]}</span>
+            </span>
+          </div>
         </div>
       </header>
 
@@ -151,10 +160,10 @@ export default function App() {
 
       {/* Connection badge removed per request */}
 
-      {/* Quick tutorial */}
-      <TutorialCard />
+      {/* Quick tutorial: only after name set */}
+      {me ? <TutorialCard /> : null}
       <DemoCta />
-      <OnboardingDemo />
+      {me ? <OnboardingDemo /> : null}
 
       {/* Name prompt overlay */}
       <NamePrompt open={showNamePrompt} initialName={me?.name} onSubmit={setName} />
