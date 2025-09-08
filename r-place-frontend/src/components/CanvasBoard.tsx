@@ -33,6 +33,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
   const [owners, setOwners] = useState<Array<string | null>>(() => new Array(size * size).fill(null))
+  const [tooltip, setTooltip] = useState<{ show: boolean; x: number; y: number; text: string } | null>(null)
   useEffect(() => {
     if (onStatusChange) onStatusChange({ supabase: !!supabase, boardSource: null })
   }, [!!supabase])
@@ -326,14 +327,22 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   function onPointerMove(e: React.PointerEvent) {
     const { x, y } = canvasToCell(e.clientX, e.clientY)
     if (x < 0 || y < 0 || x >= dims.width || y >= dims.height) {
+      setTooltip(null)
       if (canvasRef.current) canvasRef.current.title = ''
       return
     }
     const idx = y * dims.width + x
     const owner = owners[idx]
-    if (canvasRef.current) canvasRef.current.title = owner ? String(owner) : 'no owner'
+    const text = owner ? String(owner) : 'no owner'
+    if (canvasRef.current) canvasRef.current.title = text
+    // Position tooltip near cursor within the container
+    const container = canvasRef.current.parentElement as HTMLElement | null
+    if (!container) return
+    const crect = container.getBoundingClientRect()
+    setTooltip({ show: true, x: e.clientX - crect.left + 12, y: e.clientY - crect.top + 12, text })
   }
   function onPointerLeave() {
+    setTooltip(null)
     if (canvasRef.current) canvasRef.current.title = ''
   }
 
@@ -361,6 +370,15 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           onPointerUp={onPointerUp}
           onClick={onClick}
         />
+        {tooltip?.show ? (
+          <div
+            className="pointer-events-none text-xs"
+            style={{ position: 'absolute', left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -140%)',
+              background: 'rgba(0,0,0,0.75)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)', padding: '4px 8px', borderRadius: 6, whiteSpace: 'nowrap', zIndex: 5 }}
+          >
+            {tooltip.text}
+          </div>
+        ) : null}
       </div>
 
       <div className="text-xs opacity-70">

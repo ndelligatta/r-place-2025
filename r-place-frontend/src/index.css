@@ -127,6 +127,13 @@ body {
   border-color: rgba(255,255,255,0.12);
 }
 
+/* Stabilize palette swatches to avoid subtle jitter */
+.swatch {
+  will-change: transform;
+  transform: translateZ(0);
+  transition: none;
+}
+
 /* Epic platinum neon 80s title styling */
 .epic-title {
   font-weight: 900;
