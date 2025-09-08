@@ -326,17 +326,19 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   // Update canvas title on hover to show owner/no owner (minimal UI)
   function onPointerMove(e: React.PointerEvent) {
     const { x, y } = canvasToCell(e.clientX, e.clientY)
+    const canvasEl = canvasRef.current
+    if (!canvasEl) return
     if (x < 0 || y < 0 || x >= dims.width || y >= dims.height) {
       setTooltip(null)
-      if (canvasRef.current) canvasRef.current.title = ''
+      canvasEl.title = ''
       return
     }
     const idx = y * dims.width + x
     const owner = owners[idx]
     const text = owner ? String(owner) : 'no owner'
-    if (canvasRef.current) canvasRef.current.title = text
+    canvasEl.title = text
     // Position tooltip near cursor within the container
-    const container = canvasRef.current.parentElement as HTMLElement | null
+    const container = canvasEl.parentElement as HTMLElement | null
     if (!container) return
     const crect = container.getBoundingClientRect()
     setTooltip({ show: true, x: e.clientX - crect.left + 12, y: e.clientY - crect.top + 12, text })
@@ -372,9 +374,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         />
         {tooltip?.show ? (
           <div
-            className="pointer-events-none text-xs"
-            style={{ position: 'absolute', left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -140%)',
-              background: 'rgba(0,0,0,0.75)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)', padding: '4px 8px', borderRadius: 6, whiteSpace: 'nowrap', zIndex: 5 }}
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-[140%] bg-black/75 text-white border border-white/25 text-xs px-2 py-1 rounded whitespace-nowrap z-10"
+            style={{ left: tooltip.x, top: tooltip.y }}
           >
             {tooltip.text}
           </div>

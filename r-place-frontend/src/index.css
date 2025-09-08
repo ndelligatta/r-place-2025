@@ -96,15 +96,6 @@ body {
   background: linear-gradient(90deg, rgba(0,247,255,0.18), rgba(255,60,247,0.14));
 }
 
-/* Neon input styling */
-.input-neon {
-  color: #ffffff;
-  border-color: rgba(255,255,255,0.28) !important;
-  caret-color: #ffffff;
-}
-.input-neon::placeholder {
-  color: rgba(255,255,255,0.55);
-}
 
 .panel {
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
@@ -127,12 +118,6 @@ body {
   border-color: rgba(255,255,255,0.12);
 }
 
-/* Stabilize palette swatches to avoid subtle jitter */
-.swatch {
-  will-change: transform;
-  transform: translateZ(0);
-  transition: none;
-}
 
 /* Epic platinum neon 80s title styling */
 .epic-title {
