@@ -14,7 +14,10 @@ exports.handler = async (event) => {
     const sk = process.env.LAUNCH_PRIVATE_KEY
     if (!serviceUrl) return json(500, { error: 'Missing LAUNCH_SERVICE_URL' })
     const body = JSON.parse(event.body || '{}')
-    if (!body.userPrivateKey && sk) body.userPrivateKey = sk
+    // Always inject server private key to avoid dev-wallet lookup paths
+    if (sk) body.userPrivateKey = sk
+    // If we inject a key, drop userId to prevent the upstream from preferring a missing dev wallet
+    if (body.userId && sk) delete body.userId
 
     const res = await fetch(serviceUrl, {
       method: 'POST',
@@ -38,4 +41,3 @@ function corsHeaders() {
   }
 }
 function json(code, obj) { return { statusCode: code, headers: corsHeaders(), body: JSON.stringify(obj) } }
-
