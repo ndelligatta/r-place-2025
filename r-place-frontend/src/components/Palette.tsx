@@ -12,7 +12,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
         {colors.map((c, i) => {
           const isSelected = i === selected
           const style: React.CSSProperties = { backgroundColor: c }
-          const base = 'relative h-16 rounded-md flex items-center justify-center border-4 transform-gpu transition-none select-none shrink-0 overflow-hidden border-transparent'
+          const base = 'relative h-16 rounded-md flex items-center justify-center border-8 transform-gpu transition-none select-none shrink-0 overflow-hidden border-transparent'
           const selectedCls = isSelected ? ' border-white' : ''
           return (
             <button
@@ -26,7 +26,7 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
             >
               {isSelected ? (
                 <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white text-black font-extrabold text-3xl drop-shadow-xl">✓</span>
+                  <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white text-black font-extrabold text-5xl drop-shadow-xl leading-none">✓</span>
                 </span>
               ) : null}
             </button>
