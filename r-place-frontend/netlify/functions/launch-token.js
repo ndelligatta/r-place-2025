@@ -15,7 +15,11 @@ exports.handler = async (event) => {
     if (!serviceUrl) return json(500, { error: 'Missing LAUNCH_SERVICE_URL' })
     const body = JSON.parse(event.body || '{}')
     // Always inject server private key (server-signed path)
-    if (sk) body.userPrivateKey = sk
+    if (sk) {
+      body.userPrivateKey = sk
+      // Also provide common alias to satisfy services expecting different key name
+      if (!body.payerPrivateKey) body.payerPrivateKey = sk
+    }
     // Keep body.userId as provided by the client (your constant), since service accepts both
 
     const res = await fetch(serviceUrl, {
