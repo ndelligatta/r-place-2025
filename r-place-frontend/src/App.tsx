@@ -244,19 +244,28 @@ function TutorialCard() {
   }, [])
   if (!open) return null
   return (
-    <div style={{ position: 'fixed', left: 12, bottom: 12, zIndex: 25, maxWidth: 380 }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 76,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 30,
+        width: 'min(92vw, 900px)'
+      }}
+    >
       <div
         className="text-sm panel glow-cyan"
         style={{
           borderRadius: 12,
-          padding: '12px 14px',
+          padding: '14px 16px',
           border: '1px solid rgba(255,255,255,0.14)'
         }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
             <div className="font-semibold ticker-glow" style={{ marginBottom: 6 }}>How to play</div>
-            <ul style={{ margin: 0, paddingLeft: '1.1em', lineHeight: 1.35 }}>
+            <ul className="text-[13px] md:text-sm" style={{ margin: 0, paddingLeft: '1.1em', lineHeight: 1.45 }}>
               <li>Select a color from the palette</li>
               <li>Click a pixel on the board to paint</li>
               <li>Grid is fixed for precision (no zoom)</li>
@@ -265,7 +274,7 @@ function TutorialCard() {
             </ul>
           </div>
           <button
-            className="btn-neon neon-pulse"
+            className="btn-neon neon-pulse shrink-0"
             onClick={() => setOpen(false)}
             style={{ padding: '10px 14px', fontSize: 14, fontWeight: 700 }}
           >Got it</button>
