@@ -262,25 +262,25 @@ function TutorialCard() {
     <div
       style={{
         position: 'fixed',
-        top: 76,
+        top: '50%',
         left: '50%',
-        transform: 'translateX(-50%)',
+        transform: 'translate(-50%, -50%)',
         zIndex: 30,
-        width: 'min(92vw, 900px)'
+        width: 'min(92vw, 700px)'
       }}
     >
       <div
         className="text-sm panel glow-cyan"
         style={{
           borderRadius: 12,
-          padding: '14px 16px',
+          padding: '18px 18px',
           border: '1px solid rgba(255,255,255,0.14)'
         }}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="font-semibold ticker-glow" style={{ marginBottom: 6 }}>How to play</div>
-            <ul className="text-[13px] md:text-sm" style={{ margin: 0, paddingLeft: '1.1em', lineHeight: 1.45 }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-full">
+            <div className="font-semibold ticker-glow text-center" style={{ marginBottom: 8 }}>How to play</div>
+            <ul className="text-[13px] md:text-sm" style={{ margin: 0, paddingLeft: '1.1em', lineHeight: 1.5 }}>
               <li>Select a color from the palette</li>
               <li>Click a pixel on the board to paint</li>
               <li>Grid is fixed for precision (no zoom)</li>
@@ -288,11 +288,13 @@ function TutorialCard() {
               <li>Your moves sync live for everyone</li>
             </ul>
           </div>
-          <button
-            className="btn-neon neon-pulse shrink-0"
-            onClick={() => setOpen(false)}
-            style={{ padding: '10px 14px', fontSize: 14, fontWeight: 700 }}
-          >Got it</button>
+          <div className="w-full flex items-center justify-center pt-1">
+            <button
+              className="btn-neon neon-pulse"
+              onClick={() => setOpen(false)}
+              style={{ padding: '10px 18px', fontSize: 14, fontWeight: 800, background: '#000', color: '#fff', border: '1px solid #fff' }}
+            >Start now</button>
+          </div>
         </div>
       </div>
     </div>
