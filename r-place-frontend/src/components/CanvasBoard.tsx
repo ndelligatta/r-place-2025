@@ -15,10 +15,9 @@ type Props = {
   ownerName?: string
   armedImageFile?: File | null
   onConsumeImage?: () => void
-  onLaunchResult?: (res: { mint?: string; solscan?: string; photon?: string; error?: string } | null) => void
 }
 
-export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange, ownerName, armedImageFile, onConsumeImage, onLaunchResult }: Props) {
+export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange, ownerName, armedImageFile, onConsumeImage }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => {
     try {
@@ -40,6 +39,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const activeRef = useRef<Map<string, { key: string; meta: any; last: number }>>(new Map())
   const [tooltip, setTooltip] = useState<{ show: boolean; x: number; y: number; text: string } | null>(null)
+  const [overlay, setOverlay] = useState<null | { mint?: string; solscan?: string; photon?: string; error?: string }>(null)
   useEffect(() => {
     if (onStatusChange) onStatusChange({ supabase: !!supabase, boardSource: null })
   }, [!!supabase])
@@ -558,9 +558,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           const mint = (res && (res.mintAddress || res.mint || res.address)) as string | undefined
           const solscan = (res && (res.solscanUrl)) || (mint ? `https://solscan.io/token/${mint}` : undefined)
           const photon = mint ? `https://photon-sol.tinyastro.io/en/token/${mint}` : undefined
-          if (onLaunchResult) onLaunchResult(res?.success === false ? { error: String(res?.error || 'launch failed') } : { mint, solscan, photon })
+          setOverlay(res?.success === false ? { error: String(res?.error || 'launch failed') } : { mint, solscan, photon })
         }).catch((err) => {
-          if (onLaunchResult) onLaunchResult({ error: String(err && (err.message || err)) })
+          setOverlay({ error: String(err && (err.message || err)) })
         })
     } catch {}
   }
@@ -634,7 +634,43 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       <p>scroll to zoom • drag to pan • click to place</p>
     </div>
 
-    {/* Launch result moved to parent panel via onLaunchResult */}
+    {/* Overlay launch result modal (does not affect layout) */}
+    {overlay ? (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/60" onClick={() => setOverlay(null)} />
+        <div className="relative panel neon-3d rounded-xl p-5 glow-yellow max-w-[560px] w-[92%] text-sm">
+          {overlay.error ? (
+            <div className="flex flex-col gap-4">
+              <div className="text-red-400 text-base font-semibold">Launch failed</div>
+              <div className="opacity-90">{overlay.error}</div>
+              <div className="flex gap-3 justify-end">
+                <button className="btn-neon" onClick={() => setOverlay(null)}>Close</button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="text-base font-semibold" style={{ color: 'var(--color-neon-green)' }}>Token launched</div>
+              {overlay.mint ? (
+                <div>
+                  <div className="opacity-80 mb-1">Mint address</div>
+                  <div className="font-mono break-all">{overlay.mint}</div>
+                </div>
+              ) : null}
+              <div className="flex items-center gap-3 flex-wrap">
+                {overlay.solscan ? (
+                  <a className="btn-neon" href={overlay.solscan} target="_blank" rel="noreferrer">View on Solscan</a>
+                ) : null}
+                {overlay.photon ? (
+                  <a className="btn-neon" href={overlay.photon} target="_blank" rel="noreferrer">Open in Photon</a>
+                ) : null}
+                <button className="btn-neon" onClick={async () => { try { await navigator.clipboard.writeText(overlay.mint || '') } catch {} }}>Copy Mint</button>
+                <button className="btn-neon neon-pulse" onClick={() => setOverlay(null)}>Close</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    ) : null}
   </div>
   )
 }
