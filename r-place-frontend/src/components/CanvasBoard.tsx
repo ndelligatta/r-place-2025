@@ -105,6 +105,34 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     } catch { return null }
   }
 
+  // Attempt to transform a square snapshot of oldSize to current size by centering
+  function transformSnapshot(
+    oldData: Uint16Array,
+    oldSize: number,
+    newSize: number,
+    ownersOld: Array<string | null> | null,
+    imagesOld: Array<string | null> | null,
+  ): { data: Uint16Array; owners: Array<string | null>; images: Array<string | null>; offsetX: number; offsetY: number } {
+    const dataNew = new Uint16Array(newSize * newSize)
+    const ownersNew = new Array(newSize * newSize).fill(null) as Array<string | null>
+    const imagesNew = new Array(newSize * newSize).fill(null) as Array<string | null>
+    const dx = Math.max(0, Math.floor((newSize - oldSize) / 2))
+    const dy = Math.max(0, Math.floor((newSize - oldSize) / 2))
+    for (let y = 0; y < oldSize; y++) {
+      for (let x = 0; x < oldSize; x++) {
+        const oldIdx = y * oldSize + x
+        const nx = x + dx
+        const ny = y + dy
+        if (nx < 0 || ny < 0 || nx >= newSize || ny >= newSize) continue
+        const newIdx = ny * newSize + nx
+        dataNew[newIdx] = oldData[oldIdx]
+        if (ownersOld && ownersOld[oldIdx]) ownersNew[newIdx] = ownersOld[oldIdx]
+        if (imagesOld && imagesOld[oldIdx]) imagesNew[newIdx] = imagesOld[oldIdx]
+      }
+    }
+    return { data: dataNew, owners: ownersNew, images: imagesNew, offsetX: dx, offsetY: dy }
+  }
+
   // Cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return
@@ -209,6 +237,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           row = res3?.data ?? null
           error = res3?.error ?? null
         }
+        let didMigrate = false
         if (!cancelled && row && row.data) {
           const decoded = decodeBoard(row.data as unknown as string)
           if (decoded && decoded.length === size * size) {
@@ -221,12 +250,63 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
             } else {
               if (onStatusChange) onStatusChange({ supabase: true, boardSource: localHasColors ? 'local' : 'server' })
             }
+          } else if (decoded && Number.isFinite(Math.sqrt(decoded.length))) {
+            const oldSize = Math.floor(Math.sqrt(decoded.length))
+            if (oldSize > 0 && oldSize * oldSize === decoded.length) {
+              // Transform old snapshot + owners/images into centered new grid
+              const ownersOld = decodeOwners((row as any).owners_json, decoded.length)
+              const imagesOld = decodeImages((row as any).images_json, decoded.length)
+              const t = transformSnapshot(decoded, oldSize, size, ownersOld, imagesOld)
+              setData(t.data)
+              setOwners(t.owners)
+              setImages(t.images)
+              didMigrate = true
+              if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'server' })
+              // Persist transformed snapshot back to boards
+              try {
+                const payload: any = { id: boardId, data: encodeBoard(t.data), owners_json: encodeOwners(t.owners), images_json: encodeImages(t.images) }
+                await supabase.from('boards').upsert(payload)
+              } catch {}
+              // Update pixel_owners and pixel_images indices to new coordinates (idempotent: guard by old range)
+              try {
+                const { data: rowsOwners } = await supabase.from('pixel_owners' as any).select('idx').eq('board_id', boardId)
+                if (Array.isArray(rowsOwners)) {
+                  const oldCount = oldSize * oldSize
+                  for (const r of rowsOwners as Array<{ idx: number }>) {
+                    const oldIdx = r.idx
+                    if (typeof oldIdx !== 'number' || oldIdx < 0 || oldIdx >= oldCount) continue
+                    const x = oldIdx % oldSize
+                    const y = Math.floor(oldIdx / oldSize)
+                    const newIdx = (y + t.offsetY) * size + (x + t.offsetX)
+                    if (newIdx === oldIdx) continue
+                    await supabase.from('pixel_owners' as any).update({ idx: newIdx }).eq('board_id', boardId).eq('idx', oldIdx)
+                  }
+                }
+              } catch {}
+              try {
+                const { data: rowsImages } = await supabase.from('pixel_images' as any).select('idx').eq('board_id', boardId)
+                if (Array.isArray(rowsImages)) {
+                  const oldCount = oldSize * oldSize
+                  for (const r of rowsImages as Array<{ idx: number }>) {
+                    const oldIdx = r.idx
+                    if (typeof oldIdx !== 'number' || oldIdx < 0 || oldIdx >= oldCount) continue
+                    const x = oldIdx % oldSize
+                    const y = Math.floor(oldIdx / oldSize)
+                    const newIdx = (y + t.offsetY) * size + (x + t.offsetX)
+                    if (newIdx === oldIdx) continue
+                    await supabase.from('pixel_images' as any).update({ idx: newIdx }).eq('board_id', boardId).eq('idx', oldIdx)
+                  }
+                }
+              } catch {}
+            }
           }
           // Load owners/images snapshot if present
-          const ownersNext = decodeOwners((row as any).owners_json, size * size)
-          if (ownersNext) setOwners(ownersNext)
-          const imagesNext = decodeImages((row as any).images_json, size * size)
-          if (imagesNext) setImages(imagesNext)
+          if (!didMigrate) {
+            const ownersNext = decodeOwners((row as any).owners_json, size * size)
+            if (ownersNext) setOwners(ownersNext)
+            const imagesNext = decodeImages((row as any).images_json, size * size)
+            if (imagesNext) setImages(imagesNext)
+          }
         }
         if (error) {
           if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local' })
@@ -409,7 +489,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   function canvasToCell(clientX: number, clientY: number) {
     const canvas = canvasRef.current!
     const rect = canvas.getBoundingClientRect()
-    const px = Math.max(1, Math.floor(Math.min(rect.width / dims.width, rect.height / dims.height) * 0.85))
+    const px = Math.max(1, Math.floor(Math.min(rect.width / dims.width, rect.height / dims.height)))
     const boardW = dims.width * px
     const boardH = dims.height * px
     const originX = Math.floor((rect.width - boardW) / 2)
