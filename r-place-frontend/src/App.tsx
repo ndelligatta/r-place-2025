@@ -31,6 +31,7 @@ export default function App() {
   // Load grid size from Supabase (fallback to 32 if unavailable)
   const [size, setSize] = useState<number | null>(null)
   const [placedCount, setPlacedCount] = useState<number>(0)
+  const [feesUSD, setFeesUSD] = useState<number>(0)
   useEffect(() => {
     let aborted = false
     ;(async () => {
@@ -74,6 +75,29 @@ export default function App() {
       .subscribe()
     return () => { cancelled = true; try { supabase.removeChannel(ch) } catch {} }
   }, [!!supabase, size])
+
+  // Listen to total_volume for realtime fees
+  useEffect(() => {
+    if (!supabase) return
+    let cancelled = false
+    async function fetchLatest() {
+      try {
+        const { data } = await (supabase as any)
+          .from('total_volume')
+          .select('fees')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+        const f = Array.isArray(data) && data[0] ? Number(data[0].fees) || 0 : 0
+        if (!cancelled) setFeesUSD(f)
+      } catch {}
+    }
+    fetchLatest()
+    const ch = supabase
+      .channel('vol-feed', { config: { broadcast: { self: false } } })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'total_volume' }, () => fetchLatest())
+      .subscribe()
+    return () => { cancelled = true; try { supabase.removeChannel(ch) } catch {} }
+  }, [!!supabase])
   const initial = useMemo(() => (size ? new Uint16Array(size * size).fill(0) : undefined), [size])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
   const [asideHeight, setAsideHeight] = useState<number | null>(null)
@@ -162,9 +186,11 @@ export default function App() {
           </div>
           {/* neon volume progress bar */}
           <div className="mt-3">
+            <div className="text-neon-white mb-1" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>TOTAL FEES GENERATED</div>
             <div className="neon-progress">
-              <div className="neon-progress-fill" style={{ width: `${size ? Math.min(100, Math.round((placedCount / (size*size)) * 100)) : 0}%` }} />
+              <div className="neon-progress-fill" style={{ width: `${Math.min(100, (feesUSD/100000)*100)}%` }} />
             </div>
+            <div className="text-neon-white mt-1" style={{ fontSize: 12 }}>${(feesUSD || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} usd</div>
           </div>
         </div>
       </header>
