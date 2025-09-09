@@ -113,10 +113,10 @@ export default function App() {
           className="panel neon-3d rounded-lg p-4 glow-magenta w-[420px] shrink-0 flex flex-col"
           style={{ height: asideHeight ? `${asideHeight}px` : undefined }}
         >
-          {/* Inline name chooser */}
+          {/* inline name chooser */}
           <div className="mb-4">
-            <div className="section-title mb-2">Choose your name</div>
-            <p className="text-xs opacity-75 mb-2">Show up on the canvas. Change anytime.</p>
+            <div className="section-title mb-2">choose your name</div>
+            <p className="text-xs opacity-75 mb-2">show up on the canvas. change anytime.</p>
             <div className="flex gap-2">
               <input
                 className="flex-1 bg-transparent border rounded-md px-3 py-2 outline-none text-white caret-white placeholder-white/70 border-white/30"
@@ -129,15 +129,15 @@ export default function App() {
               <button className="btn-neon" onClick={() => {
                 const el = document.querySelector<HTMLInputElement>('aside input[placeholder="type your name"]');
                 if (el) { const v = el.value.trim(); if (v) setName(v) }
-              }}>Save</button>
+              }}>save</button>
             </div>
           </div>
 
-          {/* Image upload just under name */}
+          {/* image upload just under name */}
           <div className="mb-4">
-            <label className="text-xs opacity-80 block mb-2">Upload an image</label>
+            <label className="text-xs opacity-80 block mb-2">upload an image</label>
             <label className="relative h-12 rounded-md flex items-center justify-between px-3 border border-white/20 bg-black/30 cursor-pointer">
-              <span className="text-xs font-semibold opacity-90">Choose file…</span>
+              <span className="text-xs font-semibold opacity-90">choose file…</span>
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -148,11 +148,11 @@ export default function App() {
                   e.currentTarget.value = ''
                 }}
               />
-              <span className="text-[11px] opacity-70 ml-3 truncate max-w-[55%]">{armedImageFile?.name || 'PNG, JPG, or WebP'}</span>
+              <span className="text-[11px] opacity-70 ml-3 truncate max-w-[55%]">{armedImageFile?.name || 'png, jpg, or webp'}</span>
             </label>
           </div>
 
-          <h2 className="section-title mb-4">{placeCue ? 'Place your pixel!' : 'Palette'}</h2>
+          <h2 className="section-title mb-4">{placeCue ? 'place your pixel!' : 'palette'}</h2>
           <div className="flex-1 min-h-0">
             <Palette colors={palette} selected={selected} onSelect={(i) => { setSelected(i); triggerPlaceCue() }} cooldown={cooldown} />
           </div>
@@ -188,8 +188,8 @@ export default function App() {
       {/* Inline place-your-pixel prompt above grid when armed */}
       {placeCue ? (
         <div style={{ position: 'fixed', top: 70, left: '50%', transform: 'translateX(-50%)', zIndex: 30 }}>
-          <div className="btn-neon neon-pulse" style={{ padding: '8px 12px', fontWeight: 800 }}>
-            Place your Pixel to help complete the mural
+          <div className="btn-neon neon-pulse" style={{ padding: '8px 12px', fontWeight: 800, textTransform: 'none' }}>
+            place your pixel to help complete the mural
           </div>
         </div>
       ) : null}
