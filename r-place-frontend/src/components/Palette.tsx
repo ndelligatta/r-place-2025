@@ -26,7 +26,15 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
             >
               {isSelected ? (
                 <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white text-black font-extrabold text-5xl drop-shadow-xl leading-none">✓</span>
+                  <svg
+                    className="w-full h-full p-2"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M5 13l4 4L19 7" stroke="black" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </span>
               ) : null}
             </button>
