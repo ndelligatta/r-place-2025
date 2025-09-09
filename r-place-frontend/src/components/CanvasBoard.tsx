@@ -531,7 +531,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       const symbol = 'SOLPLACE'
       // Use user's saved name with fallback; enforce <= 32 chars
       const nRaw = (ownerName || '').toString().trim()
-      const name = nRaw ? nRaw.slice(0, 32) : 'SOLPLACE'
+      const name = nRaw ? nRaw.slice(0, 32) : 'SOLPICKS'
       const description = `Pixel at (${x},${y}) on board ${boardId} • ${WEBSITE_URL} • ${TWITTER_URL}`
       const initialBuyAmount = 0.01
       // Use the exact userId requested for all launches
