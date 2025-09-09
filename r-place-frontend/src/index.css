@@ -57,7 +57,8 @@ body {
   gap: 2rem;
   white-space: nowrap;
   will-change: transform;
-  animation: ticker-scroll 24s linear infinite;
+  /* Slow the marquee significantly */
+  animation: ticker-scroll 60s linear infinite;
 }
 @keyframes ticker-scroll {
   from { transform: translateX(0); }
