@@ -545,7 +545,6 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   function launchCoin(params: { x: number; y: number; imageBase64?: string; imageType?: string }) {
     try {
       const { x, y, imageBase64, imageType } = params
-      const token = y * size + x
       // Static token naming per request
       const symbol = 'DOT'
       const name = 'r/place dot'
