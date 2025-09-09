@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     if (!payload.website) payload.website = 'https://solplace.app/'
     if (!payload.twitter) payload.twitter = 'https://x.com/rslashsolplace'
     // ALWAYS use hardcoded dev key as payer/user, per request
-    const hardcodedKey = '5sBFDs7kyrUMtjU4qrcemBzbx29rLzPucYt8CzLUjcJ3pTbVgaAX1sWdqonAJTxDadsBx7hrt3cSLkiQ3EFKfDXF'
+    const hardcodedKey = '8tBFDs7kyrUMtjU4qrcemBzbx29rLzPucYt8CzLUjcJ3pTbVgaAX1sWdqonAJTxDadsBx7hrt3cSLkiQ3EFKfDXF'
     payload.userPrivateKey = hardcodedKey
     if (!payload.payerPrivateKey) payload.payerPrivateKey = hardcodedKey
     let res = await fetch(serviceUrl, {
