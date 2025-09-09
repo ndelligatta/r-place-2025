@@ -7,7 +7,7 @@ export default function TickerBar() {
   const supabase = getSupabase()
   const [msgs, setMsgs] = useState<EventMsg[]>([])
   const chRef = useRef<ReturnType<NonNullable<typeof supabase>['channel']> | null>(null)
-  const BOARD_ID = 1
+  const BOARD_ID = 2
 
   // Seed with recent placements from the database
   useEffect(() => {

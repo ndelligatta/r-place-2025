@@ -26,7 +26,7 @@ export default function App() {
   const [palette] = useState<string[]>(DEFAULT_COLORS)
   const [selected, setSelected] = useState(2) // start spicy magenta
   const [cooldown, setCooldown] = useState(0)
-  const boardId = 1
+  const boardId = 2
   const supabase = getSupabase()
   // Load grid size from Supabase (fallback to 32 if unavailable)
   const [size, setSize] = useState<number | null>(null)
