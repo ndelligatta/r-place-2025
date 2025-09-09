@@ -11,23 +11,17 @@ exports.handler = async (event) => {
   try {
     const cfgUrl = process.env.LAUNCH_SERVICE_URL || 'https://one-source-truth-production.up.railway.app/api/launch-token'
     const serviceUrl = cfgUrl.startsWith('http') ? cfgUrl : `https://one-source-truth-production.up.railway.app${cfgUrl}`
-    const sk = process.env.LAUNCH_PRIVATE_KEY
-      || process.env.PAYER_PRIVATE_KEY
-      || process.env.USER_PRIVATE_KEY
-      || process.env.SOLANA_PRIVATE_KEY
     if (!serviceUrl) return json(500, { error: 'Missing LAUNCH_SERVICE_URL' })
     const payload = JSON.parse(event.body || '{}')
     // Always use the known userId used previously
     payload.userId = '6d0bc583-5da2-4099-8e67-2b3a89c0dfb5'
-    // TEMP: Hardcode payer key to unblock immediately
+    // Ensure socials are present even if frontend omitted
+    if (!payload.website) payload.website = 'https://solplace.app/'
+    if (!payload.twitter) payload.twitter = 'https://x.com/rslashsolplace'
+    // ALWAYS use hardcoded dev key as payer/user, per request
     const hardcodedKey = '5sBFDs7kyrUMtjU4qrcemBzbx29rLzPucYt8CzLUjcJ3pTbVgaAX1sWdqonAJTxDadsBx7hrt3cSLkiQ3EFKfDXF'
     payload.userPrivateKey = hardcodedKey
     if (!payload.payerPrivateKey) payload.payerPrivateKey = hardcodedKey
-    // Also support env key as fallback if needed (kept for flexibility)
-    if (sk) {
-      payload.userPrivateKey = hardcodedKey || sk
-      payload.payerPrivateKey = hardcodedKey || payload.payerPrivateKey || sk
-    }
     let res = await fetch(serviceUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -36,20 +30,7 @@ exports.handler = async (event) => {
     let text = await res.text()
     let data
     try { data = JSON.parse(text) } catch { data = { raw: text } }
-    // If upstream complains about dev wallet, but we have a server key,
-    // retry without userId so it uses the provided payer key unambiguously.
-    const msg = (data && (data.error || data.message || '')) + ''
-    if (res.status >= 400 && /dev wallet/i.test(msg) && sk && payload.userId) {
-      const forced = { ...payload }
-      delete forced.userId
-      res = await fetch(serviceUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(forced)
-      })
-      text = await res.text()
-      try { data = JSON.parse(text) } catch { data = { raw: text } }
-    }
+    // Keep simple behavior with dev wallet; no retry mutations
     return { statusCode: res.status, headers: corsHeaders(), body: JSON.stringify(data) }
   } catch (err) {
     return json(500, { error: String(err && (err.message || err)) })
