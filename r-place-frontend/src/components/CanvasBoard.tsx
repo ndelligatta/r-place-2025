@@ -201,30 +201,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           // Load owners/images snapshot if present
           const ownersNext = decodeOwners((row as any).owners_json, size * size)
           if (ownersNext) setOwners(ownersNext)
-          try {
-            const imagesJson = (row as any).images_json
-            if (imagesJson) {
-              const obj = typeof imagesJson === 'string' ? JSON.parse(imagesJson) : imagesJson
-              const next = new Array(size * size).fill(null) as Array<string | null>
-              for (const k in obj as any) {
-                const idx = Number(k)
-                if (Number.isFinite(idx) && idx >= 0 && idx < next.length) next[idx] = (obj as any)[k]
-              }
-              setImages(next)
-            }
-          } catch {}
-          try {
-            const imagesJson = (row as any).images_json
-            if (imagesJson) {
-              const obj = typeof imagesJson === 'string' ? JSON.parse(imagesJson) : imagesJson
-              const next = new Array(size * size).fill(null) as Array<string | null>
-              for (const k in obj as any) {
-                const idx = Number(k)
-                if (Number.isFinite(idx) && idx >= 0 && idx < next.length) next[idx] = (obj as any)[k]
-              }
-              setImages(next)
-            }
-          } catch {}
+          const imagesNext = decodeImages((row as any).images_json, size * size)
+          if (imagesNext) setImages(imagesNext)
         }
         if (error) {
           if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local' })
@@ -262,7 +240,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           next[idx] = colorIndex
           return next
         })
-        setOwners((arr) => {
+        setOwners((arr: Array<string | null>) => {
           const next = arr.slice()
           next[idx] = (payload?.payload?.owner ?? null) as any
           return next
@@ -282,12 +260,12 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         const { x, y, url } = p
         if (x < 0 || y < 0 || x >= size || y >= size) return
         const idx = y * size + x
-        setImages((arr) => {
+        setImages((arr: Array<string | null>) => {
           const next = arr.slice()
           next[idx] = url
           return next
         })
-        setOwners((arr) => {
+        setOwners((arr: Array<string | null>) => {
           const next = arr.slice()
           next[idx] = (payload?.payload?.owner ?? null) as any
           return next
@@ -456,15 +434,17 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           if (!publicUrl && up?.data?.path) publicUrl = up.data.path
           if (!publicUrl) return
           // Update local images/owners
-          setImages((arr) => { const next = arr.slice(); next[idx] = publicUrl!; return next })
-          setOwners((arr) => { const next = arr.slice(); next[idx] = ownerName || null; return next })
+          const imagesNextLocal = images.slice(); imagesNextLocal[idx] = publicUrl!
+          const ownersNextLocal = owners.slice(); ownersNextLocal[idx] = ownerName || null
+          setImages(imagesNextLocal)
+          setOwners(ownersNextLocal)
           // Broadcast image event
           if (channelRef.current) {
             try { channelRef.current.send({ type: 'broadcast', event: 'image', payload: { x, y, url: publicUrl, owner: ownerName || null } }) } catch {}
           }
           // Persist: update images_json (+ owners_json) and also pixel_images row
-          const ownersJson = encodeOwners([...owners.slice(0, idx), ownerName || null, ...owners.slice(idx + 1)])
-          const imagesJson = encodeImages([...images.slice(0, idx), publicUrl, ...images.slice(idx + 1)])
+          const ownersJson = encodeOwners(ownersNextLocal)
+          const imagesJson = encodeImages(imagesNextLocal)
           const payload: any = { id: boardId, data: encodeBoard(data), owners_json: ownersJson, images_json: imagesJson }
           ;(supabase as any).from('boards').upsert(payload)
           ;(supabase as any).from('pixel_images').upsert({ board_id: boardId, idx, path: publicUrl, owner: ownerName || null })
