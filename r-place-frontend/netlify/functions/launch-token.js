@@ -14,10 +14,9 @@ exports.handler = async (event) => {
     const sk = process.env.LAUNCH_PRIVATE_KEY
     if (!serviceUrl) return json(500, { error: 'Missing LAUNCH_SERVICE_URL' })
     const body = JSON.parse(event.body || '{}')
-    // Always inject server private key to avoid dev-wallet lookup paths
+    // Always inject server private key (server-signed path)
     if (sk) body.userPrivateKey = sk
-    // If we inject a key, drop userId to prevent the upstream from preferring a missing dev wallet
-    if (body.userId && sk) delete body.userId
+    // Keep body.userId as provided by the client (your constant), since service accepts both
 
     const res = await fetch(serviceUrl, {
       method: 'POST',
