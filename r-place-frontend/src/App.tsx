@@ -114,18 +114,18 @@ export default function App() {
             <div className="w-24" />
             <div className="text-center flex-1">
               <h1 className="epic-title" style={{ fontSize: 'clamp(28px, 6vw, 56px)' }}>
-                r/place '25
+                r/solplace
               </h1>
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 rounded border border-white text-white bg-black hover:bg-black/80 text-xs md:text-sm"
+                className="px-3 py-1 rounded border text-white bg-black hover:bg-black/80 text-xs md:text-sm btn-neon neon-pulse cursor-pointer"
                 onClick={() => window.dispatchEvent(new Event('rplace:help:open' as any))}
                 title="how it works"
               >how it works</button>
               <button
-                className="px-3 py-1 rounded border border-white text-white bg-black hover:bg-black/80 text-xs md:text-sm"
-                onClick={() => window.open('https://x.com', '_blank')}
+                className="px-3 py-1 rounded border text-white bg-black hover:bg-black/80 text-xs md:text-sm btn-neon neon-pulse cursor-pointer"
+                onClick={() => window.open('https://x.com/rslashsolplace', '_blank')}
                 title="x"
               >x</button>
             </div>
@@ -273,8 +273,8 @@ function TutorialCard() {
       >
         <div className="flex flex-col items-center gap-4">
           <div className="w-full">
-            <div className="font-semibold ticker-glow text-center" style={{ marginBottom: 8 }}>How to play</div>
-            <ul className="text-[13px] md:text-sm text-center" style={{ margin: 0, paddingLeft: 0, lineHeight: 1.5, listStylePosition: 'inside' as any }}>
+            <div className="font-semibold ticker-glow text-center" style={{ marginBottom: 10, fontSize: 'clamp(22px, 4vw, 32px)' }}>How to play</div>
+            <ul className="text-center" style={{ margin: 0, paddingLeft: 0, lineHeight: 1.7, listStylePosition: 'inside', fontSize: 'clamp(14px, 2.4vw, 18px)' }}>
               <li>Select a color from the palette</li>
               <li>Click a pixel on the board to paint</li>
               <li>Grid is fixed for precision (no zoom)</li>
@@ -284,9 +284,9 @@ function TutorialCard() {
           </div>
           <div className="w-full flex items-center justify-center pt-1">
             <button
-              className="btn-neon neon-pulse"
+              className="btn-neon neon-pulse cursor-pointer"
               onClick={() => setOpen(false)}
-              style={{ padding: '10px 18px', fontSize: 14, fontWeight: 800, background: '#000', color: '#fff', border: '1px solid #fff' }}
+              style={{ padding: '12px 22px', fontSize: 16, fontWeight: 800, background: '#000', color: '#fff', border: '1px solid #fff', borderRadius: 10 }}
             >Start now</button>
           </div>
         </div>
