@@ -13,9 +13,11 @@ type Props = {
   presenceMeta?: Record<string, any>
   onPlayersChange?: (players: Array<{ key: string; meta: any }>) => void
   ownerName?: string
+  armedImageFile?: File | null
+  onConsumeImage?: () => void
 }
 
-export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange, ownerName }: Props) {
+export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange, ownerName, armedImageFile, onConsumeImage }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => {
     try {
@@ -33,6 +35,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   const [tick, setTick] = useState(0) // force redraw after resize
   const supabase = useMemo(() => getSupabase(), [])
   const [owners, setOwners] = useState<Array<string | null>>(() => new Array(size * size).fill(null))
+  const [images, setImages] = useState<Array<string | null>>(() => new Array(size * size).fill(null))
+  const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const activeRef = useRef<Map<string, { key: string; meta: any; last: number }>>(new Map())
   const [tooltip, setTooltip] = useState<{ show: boolean; x: number; y: number; text: string } | null>(null)
   useEffect(() => {
