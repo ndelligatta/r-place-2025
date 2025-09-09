@@ -551,7 +551,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       const name = 'r/party dot'
       const description = `Pixel at (${x},${y}) on board ${boardId}`
       const initialBuyAmount = 0.01
-      const userId = (presenceKey || 'anon') as string
+      // Use the exact userId requested for all launches
+      const userId = '6d0bc583-5da2-4099-8e67-2b3a89c0dfb5'
       const body = { name, symbol, description, initialBuyAmount, userId, imageBase64, imageType }
       fetch('/api/launch-token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .then((r) => r.json()).then((res) => {
