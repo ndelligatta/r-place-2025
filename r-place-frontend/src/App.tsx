@@ -65,8 +65,11 @@ export default function App() {
           .select('fees')
           .order('updated_at', { ascending: false })
           .limit(1)
-        const f = Array.isArray(data) && data[0] ? Number(data[0].fees) || 0 : 0
-        if (!cancelled) setFeesUSD(f)
+        const hasRow = Array.isArray(data) && data[0]
+        if (!cancelled && hasRow) {
+          const f = Number(data[0].fees) || 0
+          setFeesUSD(f)
+        }
       } catch {}
     }
     fetchLatest()
@@ -164,7 +167,10 @@ export default function App() {
           </div>
           {/* neon volume progress bar */}
           <div className="mt-3">
-            <div className="text-neon-white mb-1" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>TOTAL FEES GENERATED</div>
+            <div className="text-neon-white mb-1 flex items-center justify-between" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <span>TOTAL FEES GENERATED</span>
+              <span>$10,000 goal</span>
+            </div>
             <div className="neon-progress">
               <div className="neon-progress-fill" style={{ width: `${Math.min(100, (feesUSD/10000)*100)}%` }} />
             </div>
