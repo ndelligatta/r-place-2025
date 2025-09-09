@@ -134,7 +134,14 @@ export default function App() {
       </header>
 
       <main className="flex-1 mx-auto max-w-[1200px] w-full px-4 py-6 flex gap-6 items-start" style={{ maxWidth: mainMaxWidth }}>
-        <div ref={canvasPanelRef} className="panel rounded-lg p-3 md:p-4 glow-cyan flex-1 min-w-0">
+        <div ref={canvasPanelRef} className={`panel rounded-lg p-3 md:p-4 glow-cyan flex-1 min-w-0 ${placeCue ? 'grid-neon-highlight' : ''}`} style={{ position: 'relative' }}>
+          {placeCue ? (
+            <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}>
+              <div className="text-neon-white neon-pulse" style={{ fontWeight: 800, fontSize: 'clamp(14px, 3vw, 20px)' }}>
+                place your pixel on any available slot!
+              </div>
+            </div>
+          ) : null}
           {size ? (
             <CanvasBoard
               size={size}
@@ -160,44 +167,31 @@ export default function App() {
         >
           {/* inline name chooser */}
           <div className="mb-4">
-            <div className="section-title mb-2">choose your name</div>
+            <div className="section-title mb-2 text-neon-white">choose your name</div>
             <p className="text-xs opacity-75 mb-2">show up on the canvas. change anytime.</p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center p-2 rounded-[12px] btn-neon-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
               <input
-                className="flex-1 bg-transparent border rounded-md px-3 py-2 outline-none text-white caret-white placeholder-white/70 border-white/30"
+                className="flex-1 bg-transparent rounded-md px-3 py-2 outline-none text-neon-white caret-white placeholder-white/70"
                 placeholder="type your name"
                 defaultValue={me?.name || ''}
                 onBlur={(e) => { const v = e.currentTarget.value.trim(); if (v && v !== me?.name) setName(v) }}
                 onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.currentTarget as HTMLInputElement).value.trim(); if (v) setName(v) } }}
                 maxLength={40}
               />
-              <button className="btn-neon" onClick={() => {
+              <button className="btn-neon btn-neon-white text-neon-white cursor-pointer" onClick={() => {
                 const el = document.querySelector<HTMLInputElement>('aside input[placeholder="type your name"]');
                 if (el) { const v = el.value.trim(); if (v) setName(v) }
               }}>save</button>
             </div>
           </div>
 
-          {/* image upload just under name */}
+          {/* image upload just under name - drag & drop */}
           <div className="mb-4">
-            <label className="text-xs opacity-80 block mb-2">upload an image</label>
-            <label className="relative h-12 rounded-md flex items-center justify-between px-3 border border-white/20 bg-black/30 cursor-pointer">
-              <span className="text-xs font-semibold opacity-90">choose file…</span>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.currentTarget.files && e.currentTarget.files[0]
-                  if (f) setArmedImageFile(f)
-                  e.currentTarget.value = ''
-                }}
-              />
-              <span className="text-[11px] opacity-70 ml-3 truncate max-w-[55%]">{armedImageFile?.name || 'png, jpg, or webp'}</span>
-            </label>
+            <label className="text-xs opacity-80 block mb-2 text-neon-white">upload an image</label>
+            <Dropzone onFile={(f) => setArmedImageFile(f)} filename={armedImageFile?.name} />
           </div>
 
-          <h2 className="section-title mb-4">{placeCue ? 'place your pixel!' : 'palette'}</h2>
+          <h2 className="section-title mb-4 text-neon-white">{placeCue ? 'place your pixel!' : 'select a color to place!'}</h2>
           <div className="flex-1 min-h-0">
             <Palette colors={palette} selected={selected} onSelect={(i) => { setSelected(i); triggerPlaceCue() }} cooldown={cooldown} />
           </div>
@@ -238,6 +232,41 @@ export default function App() {
           </div>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+function Dropzone({ onFile, filename }: { onFile: (f: File) => void; filename?: string | null }) {
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [active, setActive] = useState(false)
+  function openDialog() { inputRef.current?.click() }
+  function onFiles(files?: FileList | null) {
+    const f = files && files[0]
+    if (f && /image\/(png|jpe?g|webp)/i.test(f.type)) onFile(f)
+  }
+  return (
+    <div
+      className={`dropzone-neon ${active ? 'active' : ''}`}
+      style={{ height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+      onClick={openDialog}
+      onDragOver={(e) => { e.preventDefault(); setActive(true) }}
+      onDragEnter={(e) => { e.preventDefault(); setActive(true) }}
+      onDragLeave={() => setActive(false)}
+      onDrop={(e) => { e.preventDefault(); setActive(false); onFiles(e.dataTransfer?.files) }}
+      role="button"
+      aria-label="Upload image"
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={(e) => { onFiles(e.currentTarget.files); e.currentTarget.value = '' }}
+      />
+      <div className="text-neon-white text-center">
+        <div style={{ fontSize: 22, lineHeight: 1 }}>&uarr;</div>
+        <div style={{ fontSize: 12, opacity: 0.85 }}>{filename || 'drag & drop image or click'}</div>
+      </div>
     </div>
   )
 }

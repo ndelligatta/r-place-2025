@@ -163,6 +163,36 @@ body {
     inset 0 0 6px rgba(255,255,255,0.15);
 }
 
+/* Drag & drop zone neon style */
+.dropzone-neon {
+  border: 2px solid #ffffff;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.35);
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.6),
+    0 0 22px rgba(255,255,255,0.35),
+    inset 0 0 8px rgba(255,255,255,0.08);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+.dropzone-neon.active {
+  box-shadow:
+    0 0 14px rgba(255,255,255,0.85),
+    0 0 28px rgba(255,255,255,0.55),
+    inset 0 0 10px rgba(255,255,255,0.12);
+  transform: translateZ(0) scale(1.01);
+}
+
+/* Grid perimeter highlight when color is selected */
+@keyframes grid-neon-pulse {
+  0% { box-shadow: 0 0 14px rgba(255,255,255,0.55), 0 0 22px rgba(255,255,255,0.35); }
+  50% { box-shadow: 0 0 30px rgba(255,255,255,0.95), 0 0 44px rgba(255,255,255,0.6); }
+  100% { box-shadow: 0 0 14px rgba(255,255,255,0.55), 0 0 22px rgba(255,255,255,0.35); }
+}
+.grid-neon-highlight {
+  border: 2px solid #fff !important;
+  animation: grid-neon-pulse 1.4s ease-in-out infinite;
+}
+
 .section-title {
   text-transform: uppercase;
   letter-spacing: 0.18em;
