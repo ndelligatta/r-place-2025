@@ -180,14 +180,24 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           error = res?.error ?? null
         }
         if (error) {
-          // Fallback for older schema without owners_json
+          // Fallback if images_json is missing
           const res2: any = await supabase
             .from('boards')
-            .select('data')
+            .select('data, owners_json')
             .eq('id', boardId)
             .single()
           row = res2?.data ?? null
           error = res2?.error ?? null
+        }
+        if (error) {
+          // Fallback for older schema without owners_json
+          const res3: any = await supabase
+            .from('boards')
+            .select('data')
+            .eq('id', boardId)
+            .single()
+          row = res3?.data ?? null
+          error = res3?.error ?? null
         }
         if (!cancelled && row && row.data) {
           const decoded = decodeBoard(row.data as unknown as string)
@@ -450,8 +460,20 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           // Persist: update images_json (+ owners_json) and also pixel_images row
           const ownersJson = encodeOwners(ownersNextLocal)
           const imagesJson = encodeImages(imagesNextLocal)
-          const payload: any = { id: boardId, data: encodeBoard(data), owners_json: ownersJson, images_json: imagesJson }
-          ;(supabase as any).from('boards').upsert(payload)
+          const payloadBoth: any = { id: boardId, data: encodeBoard(data), owners_json: ownersJson, images_json: imagesJson }
+          const payloadOwnersOnly: any = { id: boardId, data: encodeBoard(data), owners_json: ownersJson }
+          const payloadDataOnly: any = { id: boardId, data: encodeBoard(data) }
+          await (supabase as any).from('boards').upsert(payloadBoth).then(async (res: any) => {
+            if (res?.error && String(res.error.message || res.error).includes('images_json')) {
+              return (supabase as any).from('boards').upsert(payloadOwnersOnly)
+            }
+            return res
+          }).then(async (res: any) => {
+            if (res?.error && String(res.error.message || res.error).includes('owners_json')) {
+              return (supabase as any).from('boards').upsert(payloadDataOnly)
+            }
+            return res
+          })
           ;(supabase as any).from('pixel_images').upsert({ board_id: boardId, idx, path: publicUrl, owner: ownerName || null })
           if (onConsumeImage) onConsumeImage()
           setCooldown(3)
