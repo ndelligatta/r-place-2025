@@ -15,7 +15,7 @@ export default function TickerBar() {
     ;(async () => {
       if (!supabase) return
       try {
-        const { data, error } = await (supabase as any)
+        const { data } = await (supabase as any)
           .from('pixel_owners')
           .select('owner, updated_at')
           .eq('board_id', BOARD_ID)
