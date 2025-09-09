@@ -546,9 +546,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     try {
       const { x, y, imageBase64, imageType } = params
       const token = y * size + x
-      const code = token.toString(36).toUpperCase()
-      const symbol = (`RPD${code}`).slice(0, 10)
-      const name = 'r/party dot'
+      // Static token naming per request
+      const symbol = 'DOT'
+      const name = 'r/place dot'
       const description = `Pixel at (${x},${y}) on board ${boardId}`
       const initialBuyAmount = 0.01
       // Use the exact userId requested for all launches
