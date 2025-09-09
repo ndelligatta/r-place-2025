@@ -82,7 +82,13 @@ export default function App() {
   const [me, setMe] = useState<{ id: string; name: string; color: string } | null>(() => {
     try {
       const saved = localStorage.getItem('rplace_profile_v2')
-      if (saved) return JSON.parse(saved)
+      if (saved) {
+        const obj = JSON.parse(saved)
+        if (obj && typeof obj.name === 'string') {
+          obj.name = obj.name.trim().slice(0, 32)
+        }
+        return obj
+      }
     } catch {}
     return null
   })
@@ -90,7 +96,8 @@ export default function App() {
   function setName(name: string) {
     const id = me?.id || ('guest_' + Math.random().toString(36).slice(2, 10))
     const color = me?.color || DEFAULT_COLORS[(2 + Math.floor(Math.random() * (DEFAULT_COLORS.length - 2))) % DEFAULT_COLORS.length]
-    const obj = { id, name, color }
+    const clean = (name || '').trim().slice(0, 32)
+    const obj = { id, name: clean, color }
     setMe(obj)
     try { localStorage.setItem('rplace_profile_v2', JSON.stringify(obj)) } catch {}
   }
@@ -203,9 +210,9 @@ export default function App() {
                 className="flex-1 bg-transparent rounded-md px-3 py-2 outline-none text-neon-white caret-white placeholder-white/70"
                 placeholder="type your name"
                 defaultValue={me?.name || ''}
-                onBlur={(e) => { const v = e.currentTarget.value.trim(); if (v && v !== me?.name) setName(v) }}
-                onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.currentTarget as HTMLInputElement).value.trim(); if (v) setName(v) } }}
-                maxLength={40}
+                onBlur={(e) => { const v = e.currentTarget.value.trim().slice(0, 32); if (v && v !== me?.name) setName(v) }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.currentTarget as HTMLInputElement).value.trim().slice(0, 32); if (v) setName(v) } }}
+                maxLength={32}
               />
               <button className="btn-neon btn-neon-white text-neon-white cursor-pointer" onClick={() => {
                 const el = document.querySelector<HTMLInputElement>('aside input[placeholder="type your name"]');

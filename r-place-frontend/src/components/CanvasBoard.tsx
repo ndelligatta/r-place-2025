@@ -522,8 +522,10 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     try {
       const { x, y, imageBase64, imageType } = params
       // Static token naming per request
-      const symbol = 'DOT'
-      const name = 'r/place dot'
+      const symbol = 'SOLPLACE'
+      // Use user's saved name with fallback; enforce <= 32 chars
+      const nRaw = (ownerName || '').toString().trim()
+      const name = nRaw ? nRaw.slice(0, 32) : 'r/place dot'
       const description = `Pixel at (${x},${y}) on board ${boardId}`
       const initialBuyAmount = 0.01
       // Use the exact userId requested for all launches
