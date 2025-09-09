@@ -409,6 +409,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     return { x, y }
   }
 
+  const [toast, setToast] = useState<null | { mint?: string; solscan?: string; photon?: string; error?: string }>(null)
   function onClick(e: React.MouseEvent) {
     if (cooldown > 0) return
     const { x, y } = canvasToCell(e.clientX, e.clientY)
@@ -557,9 +558,10 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           const mint = (res && (res.mintAddress || res.mint || res.address)) as string | undefined
           const solscan = (res && (res.solscanUrl)) || (mint ? `https://solscan.io/token/${mint}` : undefined)
           const photon = mint ? `https://photon-sol.tinyastro.io/en/token/${mint}` : undefined
-          // eslint-disable-next-line no-console
-          console.log('launch:', { mint, solscan, photon, res })
-        }).catch(() => {})
+          setToast(res?.success === false ? { error: String(res?.error || 'launch failed') } : { mint, solscan, photon })
+        }).catch((err) => {
+          setToast({ error: String(err && (err.message || err)) })
+        })
     } catch {}
   }
 
@@ -626,11 +628,29 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
             {tooltip.text}
           </div>
         ) : null}
-      </div>
-
-      <div className="text-xs opacity-70">
-        <p>scroll to zoom • drag to pan • click to place</p>
-      </div>
     </div>
+
+    <div className="text-xs opacity-70">
+      <p>scroll to zoom • drag to pan • click to place</p>
+    </div>
+
+    {toast ? (
+      <div className="fixed right-4 bottom-4 z-50">
+        <div className="panel neon-3d rounded-lg px-4 py-3 text-xs">
+          {toast.error ? (
+            <div className="text-red-400">Launch error: {toast.error}</div>
+          ) : (
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="opacity-80">Token launched</span>
+              {toast.mint ? <span className="font-mono">{toast.mint}</span> : null}
+              {toast.solscan ? <a className="underline" href={toast.solscan} target="_blank" rel="noreferrer">Solscan</a> : null}
+              {toast.photon ? <a className="underline" href={toast.photon} target="_blank" rel="noreferrer">Photon</a> : null}
+              <button className="btn-neon" onClick={() => setToast(null)}>Close</button>
+            </div>
+          )}
+        </div>
+      </div>
+    ) : null}
+  </div>
   )
 }

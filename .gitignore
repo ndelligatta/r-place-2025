@@ -11,3 +11,6 @@ r-place-frontend/dist/
 Thumbs.db
 *.log
 
+
+# Local Netlify folder
+.netlify
