@@ -5,7 +5,7 @@ import Palette from './components/Palette'
 import BackgroundShader from './components/BackgroundShader'
 import OnboardingDemo from './components/OnboardingDemo'
 import DemoCta from './components/DemoCta'
-import NamePrompt from './components/NamePrompt'
+// NamePrompt overlay removed per request; inline name entry is in the sidebar
 
 const DEFAULT_COLORS = [
   // bases
@@ -39,13 +39,7 @@ export default function App() {
     } catch {}
     return null
   })
-  const [showNamePrompt, setShowNamePrompt] = useState(() => {
-    try {
-      const saved = localStorage.getItem('rplace_profile_v2')
-      return !saved
-    } catch { return true }
-  })
-  useEffect(() => { setShowNamePrompt(!me) }, [me])
+  // Inline name entry replaces modal
   function setName(name: string) {
     const id = me?.id || ('guest_' + Math.random().toString(36).slice(2, 10))
     const color = me?.color || DEFAULT_COLORS[(2 + Math.floor(Math.random() * (DEFAULT_COLORS.length - 2))) % DEFAULT_COLORS.length]
@@ -56,6 +50,12 @@ export default function App() {
 
   const [players, setPlayers] = useState<Array<{ key: string; meta: any }>>([])
   const [armedImageFile, setArmedImageFile] = useState<File | null>(null)
+  const [placeCue, setPlaceCue] = useState(false)
+  function triggerPlaceCue() {
+    setPlaceCue(true)
+    window.clearTimeout((triggerPlaceCue as any)._t)
+    ;(triggerPlaceCue as any)._t = window.setTimeout(() => setPlaceCue(false), 6000)
+  }
 
   // Stable presence meta to avoid resubscribe thrash
   const presenceMetaMemo = useMemo(() => (me ? { name: me.name, color: me.color } : undefined), [me?.name, me?.color])
@@ -113,9 +113,48 @@ export default function App() {
           className="panel neon-3d rounded-lg p-4 glow-magenta w-[420px] shrink-0 flex flex-col"
           style={{ height: asideHeight ? `${asideHeight}px` : undefined }}
         >
-          <h2 className="section-title mb-4">Palette</h2>
+          {/* Inline name chooser */}
+          <div className="mb-4">
+            <div className="section-title mb-2">Choose your name</div>
+            <p className="text-xs opacity-75 mb-2">Show up on the canvas. Change anytime.</p>
+            <div className="flex gap-2">
+              <input
+                className="flex-1 bg-transparent border rounded-md px-3 py-2 outline-none text-white caret-white placeholder-white/70 border-white/30"
+                placeholder="type your name"
+                defaultValue={me?.name || ''}
+                onBlur={(e) => { const v = e.currentTarget.value.trim(); if (v && v !== me?.name) setName(v) }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.currentTarget as HTMLInputElement).value.trim(); if (v) setName(v) } }}
+                maxLength={40}
+              />
+              <button className="btn-neon" onClick={() => {
+                const el = document.querySelector<HTMLInputElement>('aside input[placeholder="type your name"]');
+                if (el) { const v = el.value.trim(); if (v) setName(v) }
+              }}>Save</button>
+            </div>
+          </div>
+
+          {/* Image upload just under name */}
+          <div className="mb-4">
+            <label className="text-xs opacity-80 block mb-2">Upload an image</label>
+            <label className="relative h-12 rounded-md flex items-center justify-between px-3 border border-white/20 bg-black/30 cursor-pointer">
+              <span className="text-xs font-semibold opacity-90">Choose file…</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.currentTarget.files && e.currentTarget.files[0]
+                  if (f) setArmedImageFile(f)
+                  e.currentTarget.value = ''
+                }}
+              />
+              <span className="text-[11px] opacity-70 ml-3 truncate max-w-[55%]">{armedImageFile?.name || 'PNG, JPG, or WebP'}</span>
+            </label>
+          </div>
+
+          <h2 className="section-title mb-4">{placeCue ? 'Place your pixel!' : 'Palette'}</h2>
           <div className="flex-1 min-h-0">
-            <Palette colors={palette} selected={selected} onSelect={setSelected} cooldown={cooldown} onSelectImage={setArmedImageFile} />
+            <Palette colors={palette} selected={selected} onSelect={(i) => { setSelected(i); triggerPlaceCue() }} cooldown={cooldown} />
           </div>
 
           <div className="mt-6 space-y-3 text-sm">
@@ -146,8 +185,14 @@ export default function App() {
       <DemoCta />
       {me ? <OnboardingDemo /> : null}
 
-      {/* Name prompt overlay */}
-      <NamePrompt open={showNamePrompt} initialName={me?.name} onSubmit={setName} />
+      {/* Inline place-your-pixel prompt above grid when armed */}
+      {placeCue ? (
+        <div style={{ position: 'fixed', top: 70, left: '50%', transform: 'translateX(-50%)', zIndex: 30 }}>
+          <div className="btn-neon neon-pulse" style={{ padding: '8px 12px', fontWeight: 800 }}>
+            Place your Pixel to help complete the mural
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

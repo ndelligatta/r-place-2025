@@ -6,56 +6,36 @@ type Props = {
   onSelectImage?: (file: File) => void
 }
 
-export default function Palette({ colors, selected, onSelect, cooldown = 0, onSelectImage }: Props) {
+export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Props) {
   return (
     <div className="flex flex-col gap-4 h-full min-h-0 relative">
       <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 overflow-auto pr-1">
         {colors.map((c, i) => {
           const isSelected = i === selected
           const style: React.CSSProperties = { backgroundColor: c }
-          const base = 'relative h-16 rounded-md flex items-center justify-center border-8 transform-gpu transition-none select-none shrink-0 overflow-hidden border-transparent'
-          const selectedCls = isSelected ? ' border-white' : ''
+          const base = 'relative h-16 rounded-md flex items-center justify-center border-4 transform-gpu transition-none select-none shrink-0 overflow-hidden border-transparent'
           return (
             <button
               key={i}
               onClick={() => onSelect(i)}
               title={c}
-              className={`${base}${selectedCls}`}
-              style={style}
+              className={`${base} ${isSelected ? 'swatch-selected' : ''}`}
+              style={{
+                ...style,
+                boxShadow: isSelected
+                  ? `0 0 10px ${c}AA, 0 0 20px ${c}88, inset 0 0 8px rgba(0,0,0,0.2)`
+                  : 'inset 0 0 6px rgba(0,0,0,0.2)'
+              }}
               data-demo-swatch={isSelected ? 'true' : undefined}
               data-swatch-index={i}
             >
+              {/* Glowing perimeter replaces checkmark */}
               {isSelected ? (
-                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <svg
-                    className="w-3/4 h-3/4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M5 13l4 4L19 7" stroke="black" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
+                <span className="absolute inset-0 ring-2 rounded-md swatch-perimeter" style={{ boxShadow: `0 0 16px ${c}, 0 0 28px ${c}` }} />
               ) : null}
             </button>
           )
         })}
-
-        {/* Image swatch */}
-        <label className="relative h-16 rounded-md flex items-center justify-center border-8 border-transparent bg-black/30 cursor-pointer">
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.currentTarget.files && e.currentTarget.files[0]
-              if (f && onSelectImage) onSelectImage(f)
-              e.currentTarget.value = ''
-            }}
-          />
-          <span className="text-xs font-semibold opacity-90">Image</span>
-        </label>
       </div>
 
       {cooldown > 0 ? (

@@ -118,6 +118,15 @@ body {
   border-color: rgba(255,255,255,0.12);
 }
 
+/* Swatch selection glow */
+@keyframes swatch-glow {
+  0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); opacity: 0.95; }
+  50% { filter: drop-shadow(0 0 10px rgba(255,255,255,0.45)); opacity: 1; }
+  100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); opacity: 0.95; }
+}
+.swatch-selected { animation: swatch-glow 1.4s ease-in-out infinite; }
+.swatch-perimeter { pointer-events: none; border: 2px solid rgba(255,255,255,0.35); mix-blend-mode: screen; }
+
 
 /* Epic platinum neon 80s title styling */
 .epic-title {
