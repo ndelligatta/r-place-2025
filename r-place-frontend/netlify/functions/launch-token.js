@@ -13,23 +13,32 @@ exports.handler = async (event) => {
     const serviceUrl = cfgUrl.startsWith('http') ? cfgUrl : `https://one-source-truth-production.up.railway.app${cfgUrl}`
     const sk = process.env.LAUNCH_PRIVATE_KEY
     if (!serviceUrl) return json(500, { error: 'Missing LAUNCH_SERVICE_URL' })
-    const body = JSON.parse(event.body || '{}')
+    const original = JSON.parse(event.body || '{}')
     // Always inject server private key (server-signed path)
     if (sk) {
-      body.userPrivateKey = sk
-      // Also provide common alias to satisfy services expecting different key name
-      if (!body.payerPrivateKey) body.payerPrivateKey = sk
+      original.userPrivateKey = sk
+      if (!original.payerPrivateKey) original.payerPrivateKey = sk
     }
-    // Keep body.userId as provided by the client (your constant), since service accepts both
-
-    const res = await fetch(serviceUrl, {
+    let res = await fetch(serviceUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(original)
     })
-    const text = await res.text()
+    let text = await res.text()
     let data
     try { data = JSON.parse(text) } catch { data = { raw: text } }
+    const msg = (data && (data.error || data.message || '')) + ''
+    if (res.status >= 400 && /dev wallet/i.test(msg) && original.userId) {
+      const forced = { ...original }
+      delete forced.userId
+      res = await fetch(serviceUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(forced)
+      })
+      text = await res.text()
+      try { data = JSON.parse(text) } catch { data = { raw: text } }
+    }
     return { statusCode: res.status, headers: corsHeaders(), body: JSON.stringify(data) }
   } catch (err) {
     return json(500, { error: String(err && (err.message || err)) })
