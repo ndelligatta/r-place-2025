@@ -1,4 +1,4 @@
-// Netlify Function: Proxy to token launch microservice
+// Netlify Function (under base=r-place-frontend): Proxy to token launch microservice
 // Reads LAUNCH_SERVICE_URL and LAUNCH_PRIVATE_KEY from env
 
 exports.handler = async (event) => {
@@ -13,9 +13,7 @@ exports.handler = async (event) => {
     const serviceUrl = cfgUrl.startsWith('http') ? cfgUrl : `https://one-source-truth-production.up.railway.app${cfgUrl}`
     const sk = process.env.LAUNCH_PRIVATE_KEY
     if (!serviceUrl) return json(500, { error: 'Missing LAUNCH_SERVICE_URL' })
-    // Parse client payload
     const body = JSON.parse(event.body || '{}')
-    // Inject server-side private key if not provided by client
     if (!body.userPrivateKey && sk) body.userPrivateKey = sk
 
     const res = await fetch(serviceUrl, {
