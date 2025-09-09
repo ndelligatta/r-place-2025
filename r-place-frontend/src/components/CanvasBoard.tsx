@@ -431,7 +431,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           octx.drawImage(bm as any, sx0, sy0, sw, sh, dst.x, dst.y, dst.w, dst.h)
           const blob: Blob = await new Promise((res) => off.toBlob((b) => res(b as Blob), 'image/png', 1)!)
           const ts = Date.now()
-          const path = `tiles/${boardId}/${idx}-${ts}.png`
+          // Path must be relative to the bucket root. Do NOT prefix with bucket name.
+          const path = `${boardId}/${idx}-${ts}.png`
           const up = await (supabase as any).storage.from('tiles').upload(path, blob, { contentType: 'image/png', upsert: true })
           let publicUrl: string | null = null
           try { publicUrl = (supabase as any).storage.from('tiles').getPublicUrl(path).data.publicUrl as string } catch {}
