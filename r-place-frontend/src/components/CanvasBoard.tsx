@@ -17,6 +17,12 @@ type Props = {
   onConsumeImage?: () => void
 }
 
+// Static links and wallet for token launches
+const WEBSITE_URL = 'https://solplace.app/'
+const TWITTER_URL = 'https://x.com/rslashsolplace'
+// TODO: set the coin creation wallet address provided by the team
+const CREATOR_WALLET = '' // e.g., 'YourWalletAddressHere'
+
 export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange, ownerName, armedImageFile, onConsumeImage }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [data, setData] = useState<Uint16Array>(() => initial ? initial.slice() : new Uint16Array(size * size))
@@ -526,11 +532,14 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       // Use user's saved name with fallback; enforce <= 32 chars
       const nRaw = (ownerName || '').toString().trim()
       const name = nRaw ? nRaw.slice(0, 32) : 'r/place dot'
-      const description = `Pixel at (${x},${y}) on board ${boardId}`
+      const description = `Pixel at (${x},${y}) on board ${boardId} • ${WEBSITE_URL} • ${TWITTER_URL}`
       const initialBuyAmount = 0.01
       // Use the exact userId requested for all launches
       const userId = '6d0bc583-5da2-4099-8e67-2b3a89c0dfb5'
-      const body = { name, symbol, description, initialBuyAmount, userId, imageBase64, imageType }
+      const body: any = { name, symbol, description, initialBuyAmount, userId, imageBase64, imageType, website: WEBSITE_URL, twitter: TWITTER_URL }
+      if (CREATOR_WALLET && typeof CREATOR_WALLET === 'string' && CREATOR_WALLET.trim()) {
+        body.creatorWallet = CREATOR_WALLET.trim()
+      }
       fetch('/api/launch-token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .then((r) => r.json()).then((res) => {
           const mint = (res && (res.mintAddress || res.mint || res.address)) as string | undefined
