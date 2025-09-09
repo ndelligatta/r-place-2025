@@ -34,7 +34,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const activeRef = useRef<Map<string, { key: string; meta: any; last: number }>>(new Map())
   const [tooltip, setTooltip] = useState<{ show: boolean; x: number; y: number; text: string } | null>(null)
-  const [overlay, setOverlay] = useState<null | { mint?: string; solscan?: string; photon?: string; error?: string }>(null)
+  const [overlay, setOverlay] = useState<null | { mint?: string; solscan?: string; error?: string }>(null)
   useEffect(() => {
     if (onStatusChange) onStatusChange({ supabase: !!supabase, boardSource: null })
   }, [!!supabase])
@@ -545,8 +545,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         .then((r) => r.json()).then((res) => {
           const mint = (res && (res.mintAddress || res.mint || res.address)) as string | undefined
           const solscan = (res && (res.solscanUrl)) || (mint ? `https://solscan.io/token/${mint}` : undefined)
-          const photon = mint ? `https://photon-sol.tinyastro.io/en/token/${mint}` : undefined
-          setOverlay(res?.success === false ? { error: String(res?.error || 'launch failed') } : { mint, solscan, photon })
+          setOverlay(res?.success === false ? { error: String(res?.error || 'launch failed') } : { mint, solscan })
         }).catch((err) => {
           setOverlay({ error: String(err && (err.message || err)) })
         })
@@ -648,9 +647,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
                 {overlay.solscan ? (
                   <a className="btn-neon" href={overlay.solscan} target="_blank" rel="noreferrer">View on Solscan</a>
                 ) : null}
-                {overlay.photon ? (
-                  <a className="btn-neon" href={overlay.photon} target="_blank" rel="noreferrer">Open in Photon</a>
-                ) : null}
+                {/* Photon link intentionally removed */}
                 <button className="btn-neon" onClick={async () => { try { await navigator.clipboard.writeText(overlay.mint || '') } catch {} }}>Copy Mint</button>
                 <button className="btn-neon neon-pulse" onClick={() => setOverlay(null)}>Close</button>
               </div>
