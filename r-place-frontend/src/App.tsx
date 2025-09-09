@@ -56,6 +56,7 @@ export default function App() {
 
   const [players, setPlayers] = useState<Array<{ key: string; meta: any }>>([])
   const [armedImageFile, setArmedImageFile] = useState<File | null>(null)
+  const [launchResult, setLaunchResult] = useState<null | { mint?: string; solscan?: string; photon?: string; error?: string }>(null)
 
   // Stable presence meta to avoid resubscribe thrash
   const presenceMetaMemo = useMemo(() => (me ? { name: me.name, color: me.color } : undefined), [me?.name, me?.color])
@@ -107,6 +108,7 @@ export default function App() {
             ownerName={me?.name}
             armedImageFile={armedImageFile}
             onConsumeImage={() => setArmedImageFile(null)}
+            onLaunchResult={setLaunchResult}
           />
         </div>
         <aside
@@ -135,6 +137,39 @@ export default function App() {
 
           {/* removed the connect wallet button per request */}
         </aside>
+        {launchResult ? (
+          <aside className="panel neon-3d rounded-lg p-4 glow-yellow w-[420px] shrink-0 flex flex-col" style={{ height: asideHeight ? `${asideHeight}px` : undefined }}>
+            <h2 className="section-title mb-4">Launch Result</h2>
+            {launchResult.error ? (
+              <div className="flex-1 min-h-0 flex flex-col items-start justify-center gap-3">
+                <div className="text-red-400 text-base font-semibold">Launch failed</div>
+                <div className="text-sm opacity-90">{launchResult.error}</div>
+                <button className="btn-neon mt-2" onClick={() => setLaunchResult(null)}>Dismiss</button>
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 flex flex-col gap-4">
+                <div>
+                  <div className="opacity-80 text-sm">Mint address</div>
+                  <div className="font-mono break-all text-sm">{launchResult.mint}</div>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {launchResult.solscan ? (
+                    <a className="btn-neon" href={launchResult.solscan} target="_blank" rel="noreferrer">View on Solscan</a>
+                  ) : null}
+                  {launchResult.photon ? (
+                    <a className="btn-neon" href={launchResult.photon} target="_blank" rel="noreferrer">Open in Photon</a>
+                  ) : null}
+                  <button
+                    className="btn-neon"
+                    onClick={async () => { try { await navigator.clipboard.writeText(launchResult.mint || ''); } catch {} }}
+                  >Copy Mint</button>
+                  <button className="btn-neon neon-pulse" onClick={() => setLaunchResult(null)}>Close</button>
+                </div>
+                <div className="mt-auto text-xs opacity-70">This panel updates when a token launches.</div>
+              </div>
+            )}
+          </aside>
+        ) : null}
       </main>
 
       {/* footer removed per request */}
