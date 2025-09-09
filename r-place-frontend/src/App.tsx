@@ -30,6 +30,7 @@ export default function App() {
   const supabase = getSupabase()
   // Load grid size from Supabase (fallback to 32 if unavailable)
   const [size, setSize] = useState<number | null>(null)
+  const [placedCount, setPlacedCount] = useState<number>(0)
   useEffect(() => {
     let aborted = false
     ;(async () => {
@@ -51,6 +52,28 @@ export default function App() {
     })()
     return () => { aborted = true }
   }, [!!supabase])
+  // Count placed pixels for neon progress
+  useEffect(() => {
+    let cancelled = false
+    async function fetchCount() {
+      if (!supabase || !size) return
+      try {
+        const res = await (supabase as any)
+          .from('pixel_owners')
+          .select('idx', { count: 'exact', head: true })
+          .eq('board_id', boardId)
+        const cnt = (res?.count as number) || 0
+        if (!cancelled) setPlacedCount(cnt)
+      } catch {}
+    }
+    fetchCount()
+    if (!supabase || !size) return
+    const ch = supabase
+      .channel('pixel-count', { config: { broadcast: { self: false } } })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pixel_owners', filter: `board_id=eq.${boardId}` }, () => { fetchCount() })
+      .subscribe()
+    return () => { cancelled = true; try { supabase.removeChannel(ch) } catch {} }
+  }, [!!supabase, size])
   const initial = useMemo(() => (size ? new Uint16Array(size * size).fill(0) : undefined), [size])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
   const [asideHeight, setAsideHeight] = useState<number | null>(null)
@@ -128,6 +151,12 @@ export default function App() {
                 onClick={() => window.open('https://x.com/rslashsolplace', '_blank')}
                 title="x"
               >x</button>
+            </div>
+          </div>
+          {/* neon volume progress bar */}
+          <div className="mt-3">
+            <div className="neon-progress">
+              <div className="neon-progress-fill" style={{ width: `${size ? Math.min(100, Math.round((placedCount / (size*size)) * 100)) : 0}%` }} />
             </div>
           </div>
         </div>
