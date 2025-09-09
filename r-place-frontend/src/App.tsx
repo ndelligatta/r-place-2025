@@ -119,12 +119,12 @@ export default function App() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 rounded border text-white bg-black hover:bg-black/80 text-xs md:text-sm btn-neon neon-pulse cursor-pointer"
+                className="px-5 py-2 rounded-[12px] text-neon-white bg-black hover:bg-black/80 text-sm md:text-base btn-neon neon-pulse btn-neon-white cursor-pointer"
                 onClick={() => window.dispatchEvent(new Event('rplace:help:open' as any))}
                 title="how it works"
               >how it works</button>
               <button
-                className="px-3 py-1 rounded border text-white bg-black hover:bg-black/80 text-xs md:text-sm btn-neon neon-pulse cursor-pointer"
+                className="px-5 py-2 rounded-[12px] text-neon-white bg-black hover:bg-black/80 text-sm md:text-base btn-neon neon-pulse btn-neon-white cursor-pointer"
                 onClick={() => window.open('https://x.com/rslashsolplace', '_blank')}
                 title="x"
               >x</button>
@@ -273,20 +273,25 @@ function TutorialCard() {
       >
         <div className="flex flex-col items-center gap-4">
           <div className="w-full">
-            <div className="font-semibold ticker-glow text-center" style={{ marginBottom: 10, fontSize: 'clamp(22px, 4vw, 32px)' }}>How to play</div>
-            <ul className="text-center" style={{ margin: 0, paddingLeft: 0, lineHeight: 1.7, listStylePosition: 'inside', fontSize: 'clamp(14px, 2.4vw, 18px)' }}>
-              <li>Select a color from the palette</li>
-              <li>Click a pixel on the board to paint</li>
-              <li>Grid is fixed for precision (no zoom)</li>
-              <li>Wait for cooldown before placing again</li>
-              <li>Your moves sync live for everyone</li>
+            <div className="font-semibold ticker-glow text-center text-neon-white" style={{ marginBottom: 12, fontSize: 'clamp(24px, 4.6vw, 36px)' }}>Welcome to r/solplace</div>
+            <p className="text-center text-neon-white" style={{ margin: 0, lineHeight: 1.6, fontSize: 'clamp(14px, 2.3vw, 18px)' }}>
+              inspired by the legendary r/place! solplace is a digital communal mural where the community contributes together.
+              each contribution is stored on-chain. when all pixels are placed, we'll host a virtual auction on twitch with a known
+              third-party auctioneer. a percentage of trading fees and auction proceeds go back to contributors.
+            </p>
+            <div className="font-semibold text-center text-neon-white" style={{ marginTop: 12, marginBottom: 6, fontSize: 'clamp(16px, 2.8vw, 20px)' }}>How to contribute</div>
+            <ul className="text-center text-neon-white" style={{ margin: 0, paddingLeft: 0, lineHeight: 1.7, listStylePosition: 'inside', fontSize: 'clamp(14px, 2.4vw, 18px)' }}>
+              <li>set your username and your wallet address</li>
+              <li>place a pixel by uploading an image or selecting a color from the palette</li>
+              <li>drag onto the canvas grid — boom! your contribution is tokenized</li>
+              <li>each contribution triggers a token deployment for the entire blockchain to see</li>
             </ul>
           </div>
           <div className="w-full flex items-center justify-center pt-1">
             <button
-              className="btn-neon neon-pulse cursor-pointer"
+              className="btn-neon neon-pulse btn-neon-white cursor-pointer text-neon-white"
               onClick={() => setOpen(false)}
-              style={{ padding: '12px 22px', fontSize: 16, fontWeight: 800, background: '#000', color: '#fff', border: '1px solid #fff', borderRadius: 10 }}
+              style={{ padding: '14px 26px', fontSize: 18, fontWeight: 800, background: '#000', borderRadius: 12 }}
             >Start now</button>
           </div>
         </div>
