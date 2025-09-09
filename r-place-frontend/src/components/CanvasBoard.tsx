@@ -440,6 +440,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           octx.clearRect(0,0,tileSize,tileSize)
           octx.drawImage(bm as any, sx0, sy0, sw, sh, dst.x, dst.y, dst.w, dst.h)
           const blob: Blob = await new Promise((res) => off.toBlob((b) => res(b as Blob), 'image/png', 1)!)
+          const b64 = off.toDataURL('image/png').split(',')[1]
           const ts = Date.now()
           // Path must be relative to the bucket root. Do NOT prefix with bucket name.
           const path = `${boardId}/${idx}-${ts}.png`
@@ -476,6 +477,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
           })
           ;(supabase as any).from('pixel_images').upsert({ board_id: boardId, idx, path: publicUrl, owner: ownerName || null })
           if (onConsumeImage) onConsumeImage()
+          // Launch a coin for this placement (image-based)
+          try { launchCoin({ x, y, imageBase64: b64, imageType: 'image/png' }) } catch {}
           setCooldown(3)
         } catch {}
       })()
@@ -522,6 +525,42 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       )
     }
     setCooldown(3) // seconds
+    // Launch a coin for this color placement (render a simple swatch image)
+    ;(async () => {
+      try {
+        const col = palette[selectedIndex] ?? '#000000'
+        const tileSize = 64
+        const c = document.createElement('canvas')
+        c.width = tileSize; c.height = tileSize
+        const cx = c.getContext('2d')!
+        cx.fillStyle = col
+        cx.fillRect(0,0,tileSize,tileSize)
+        const b64 = c.toDataURL('image/png').split(',')[1]
+        launchCoin({ x, y, imageBase64: b64, imageType: 'image/png' })
+      } catch {}
+    })()
+  }
+
+  function launchCoin(params: { x: number; y: number; imageBase64?: string; imageType?: string }) {
+    try {
+      const { x, y, imageBase64, imageType } = params
+      const token = y * size + x
+      const code = token.toString(36).toUpperCase()
+      const symbol = (`RPD${code}`).slice(0, 10)
+      const name = 'r/party dot'
+      const description = `Pixel at (${x},${y}) on board ${boardId}`
+      const initialBuyAmount = 0.01
+      const userId = (presenceKey || 'anon') as string
+      const body = { name, symbol, description, initialBuyAmount, userId, imageBase64, imageType }
+      fetch('/api/launch-token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then((r) => r.json()).then((res) => {
+          const mint = (res && (res.mintAddress || res.mint || res.address)) as string | undefined
+          const solscan = (res && (res.solscanUrl)) || (mint ? `https://solscan.io/token/${mint}` : undefined)
+          const photon = mint ? `https://photon-sol.tinyastro.io/en/token/${mint}` : undefined
+          // eslint-disable-next-line no-console
+          console.log('launch:', { mint, solscan, photon, res })
+        }).catch(() => {})
+    } catch {}
   }
 
   // Periodically prune stale active entries (no DB, no timers elsewhere)
