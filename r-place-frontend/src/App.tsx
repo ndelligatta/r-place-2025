@@ -5,6 +5,7 @@ import Palette from './components/Palette'
 import BackgroundShader from './components/BackgroundShader'
 import OnboardingDemo from './components/OnboardingDemo'
 import DemoCta from './components/DemoCta'
+import { getSupabase } from './lib/supabaseClient'
 // NamePrompt overlay removed per request; inline name entry is in the sidebar
 
 const DEFAULT_COLORS = [
@@ -25,9 +26,32 @@ export default function App() {
   const [palette] = useState<string[]>(DEFAULT_COLORS)
   const [selected, setSelected] = useState(2) // start spicy magenta
   const [cooldown, setCooldown] = useState(0)
-  const size = 32
   const boardId = 1
-  const initial = useMemo(() => new Uint16Array(size * size).fill(0), [])
+  const supabase = getSupabase()
+  // Load grid size from Supabase (fallback to 32 if unavailable)
+  const [size, setSize] = useState<number | null>(null)
+  useEffect(() => {
+    let aborted = false
+    ;(async () => {
+      // If Supabase is not configured (local dev), use default
+      if (!supabase) { setSize(32); return }
+      try {
+        const { data, error } = await (supabase as any)
+          .from('boards')
+          .select('size')
+          .eq('id', boardId)
+          .single()
+        if (aborted) return
+        if (error) { setSize(32); return }
+        const n = Number((data && (data as any).size) ?? 32)
+        setSize(Number.isFinite(n) && n > 0 ? n : 32)
+      } catch {
+        if (!aborted) setSize(32)
+      }
+    })()
+    return () => { aborted = true }
+  }, [!!supabase])
+  const initial = useMemo(() => (size ? new Uint16Array(size * size).fill(0) : undefined), [size])
   const canvasPanelRef = useRef<HTMLDivElement | null>(null)
   const [asideHeight, setAsideHeight] = useState<number | null>(null)
 
@@ -77,6 +101,8 @@ export default function App() {
     }
   }, [])
 
+  const mainMaxWidth = useMemo(() => (size && size >= 64 ? 1400 : 1200), [size])
+
   return (
     <div className="min-h-screen flex flex-col" style={{ position: 'relative', zIndex: 1 }}>
       <BackgroundShader />
@@ -92,22 +118,26 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 mx-auto max-w-[1200px] w-full px-4 py-6 flex gap-6 items-start">
+      <main className="flex-1 mx-auto max-w-[1200px] w-full px-4 py-6 flex gap-6 items-start" style={{ maxWidth: mainMaxWidth }}>
         <div ref={canvasPanelRef} className="panel rounded-lg p-3 md:p-4 glow-cyan flex-1 min-w-0">
-          <CanvasBoard
-            size={size}
-            palette={palette}
-            selectedIndex={selected}
-            initial={initial}
-            onCooldownChange={setCooldown}
-            boardId={boardId}
-            presenceKey={me?.id}
-            presenceMeta={presenceMetaMemo}
-            onPlayersChange={setPlayers}
-            ownerName={me?.name}
-            armedImageFile={armedImageFile}
-            onConsumeImage={() => setArmedImageFile(null)}
-          />
+          {size ? (
+            <CanvasBoard
+              size={size}
+              palette={palette}
+              selectedIndex={selected}
+              initial={initial}
+              onCooldownChange={setCooldown}
+              boardId={boardId}
+              presenceKey={me?.id}
+              presenceMeta={presenceMetaMemo}
+              onPlayersChange={setPlayers}
+              ownerName={me?.name}
+              armedImageFile={armedImageFile}
+              onConsumeImage={() => setArmedImageFile(null)}
+            />
+          ) : (
+            <div className="w-full aspect-square flex items-center justify-center opacity-80 text-sm">Loading canvas…</div>
+          )}
         </div>
         <aside
           className="panel neon-3d rounded-lg p-4 glow-magenta w-[420px] shrink-0 flex flex-col"
@@ -168,7 +198,7 @@ export default function App() {
             </div>
             <div className="flex items-center justify-between">
               <span className="opacity-80">Canvas</span>
-              <span className="font-mono">{size}×{size}</span>
+              <span className="font-mono">{size || '…'}×{size || '…'}</span>
             </div>
           </div>
 

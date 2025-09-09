@@ -26,7 +26,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         const binary = atob(saved)
         const bytes = new Uint8Array(binary.length)
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-        return new Uint16Array(bytes.buffer)
+        const arr = new Uint16Array(bytes.buffer)
+        // Ensure local data matches current grid size; otherwise re-init
+        if (arr.length === size * size) return arr
       }
     } catch {}
     return initial ? initial.slice() : new Uint16Array(size * size)
@@ -116,6 +118,13 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
   }, [cooldown, onCooldownChange])
 
   const dims = useMemo(() => ({ width: size, height: size }), [size])
+
+  // When size or board changes, reset local state to match new dimensions
+  useEffect(() => {
+    setData(() => new Uint16Array(size * size))
+    setOwners(() => new Array(size * size).fill(null))
+    setImages(() => new Array(size * size).fill(null))
+  }, [size, boardId])
 
   // Ensure crisp canvas and redraw on resize
   useLayoutEffect(() => {
@@ -316,8 +325,8 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     const w = Math.floor(rect.width)
     const h = Math.floor(rect.height)
 
-    // Zoom-out a touch: fit board to 85% of the container and center
-    const px = Math.max(1, Math.floor(Math.min(w / dims.width, h / dims.height) * 0.85))
+    // Fit the board to the container and center (no extra margin shrink)
+    const px = Math.max(1, Math.floor(Math.min(w / dims.width, h / dims.height)))
     const boardW = dims.width * px
     const boardH = dims.height * px
     const originX = Math.floor((w - boardW) / 2)
