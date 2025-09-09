@@ -225,8 +225,8 @@ export default function App() {
 
       {/* Connection badge removed per request */}
 
-      {/* Quick tutorial: only after name set */}
-      {me ? <TutorialCard /> : null}
+      {/* how to play banner: always show on visit (dismissible), not gated by name */}
+      <TutorialCard />
       <DemoCta />
       {me ? <OnboardingDemo /> : null}
 
@@ -243,17 +243,10 @@ export default function App() {
 }
 
 function TutorialCard() {
-  const [open, setOpen] = useState(() => {
-    try { return localStorage.getItem('rplace_help_v1') !== 'dismissed' } catch { return true }
-  })
+  // Always show on initial load/refresh; user can dismiss for the current session
+  const [open, setOpen] = useState(true)
   useEffect(() => {
-    try { localStorage.setItem('rplace_help_v1', open ? 'open' : 'dismissed') } catch {}
-  }, [open])
-  useEffect(() => {
-    function onOpen() {
-      setOpen(true)
-      try { localStorage.setItem('rplace_help_v1', 'open') } catch {}
-    }
+    function onOpen() { setOpen(true) }
     window.addEventListener('rplace:help:open' as any, onOpen)
     return () => window.removeEventListener('rplace:help:open' as any, onOpen)
   }, [])
@@ -270,17 +263,18 @@ function TutorialCard() {
       }}
     >
       <div
-        className="text-sm panel glow-cyan"
+        className="text-sm glow-cyan"
         style={{
           borderRadius: 12,
-          padding: '18px 18px',
-          border: '1px solid rgba(255,255,255,0.14)'
+          padding: '20px 18px',
+          border: '1px solid rgba(255,255,255,0.22)',
+          background: '#000'
         }}
       >
         <div className="flex flex-col items-center gap-4">
           <div className="w-full">
             <div className="font-semibold ticker-glow text-center" style={{ marginBottom: 8 }}>How to play</div>
-            <ul className="text-[13px] md:text-sm" style={{ margin: 0, paddingLeft: '1.1em', lineHeight: 1.5 }}>
+            <ul className="text-[13px] md:text-sm text-center" style={{ margin: 0, paddingLeft: 0, lineHeight: 1.5, listStylePosition: 'inside' as any }}>
               <li>Select a color from the palette</li>
               <li>Click a pixel on the board to paint</li>
               <li>Grid is fixed for precision (no zoom)</li>
