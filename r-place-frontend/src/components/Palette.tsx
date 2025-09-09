@@ -28,13 +28,13 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0, onSe
               {isSelected ? (
                 <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <svg
-                    className="w-full h-full p-2"
+                    className="w-3/4 h-3/4"
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <path d="M5 13l4 4L19 7" stroke="black" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M5 13l4 4L19 7" stroke="black" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
               ) : null}
