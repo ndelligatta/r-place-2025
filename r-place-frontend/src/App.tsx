@@ -110,10 +110,25 @@ export default function App() {
 
       <header className="sticky top-0 z-20 panel glow-cyan">
         <div className="mx-auto max-w-[1200px] px-4 py-4">
-          <div className="flex items-center justify-center text-center">
-            <h1 className="epic-title" style={{ fontSize: 'clamp(28px, 6vw, 56px)' }}>
-              r/place '25
-            </h1>
+          <div className="flex items-center justify-between">
+            <div className="w-24" />
+            <div className="text-center flex-1">
+              <h1 className="epic-title" style={{ fontSize: 'clamp(28px, 6vw, 56px)' }}>
+                r/place '25
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="px-3 py-1 rounded border border-white text-white bg-black hover:bg-black/80 text-xs md:text-sm"
+                onClick={() => window.dispatchEvent(new Event('rplace:help:open' as any))}
+                title="how it works"
+              >how it works</button>
+              <button
+                className="px-3 py-1 rounded border border-white text-white bg-black hover:bg-black/80 text-xs md:text-sm"
+                onClick={() => window.open('https://x.com', '_blank')}
+                title="x"
+              >x</button>
+            </div>
           </div>
         </div>
       </header>
