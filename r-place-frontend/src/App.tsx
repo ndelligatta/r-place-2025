@@ -196,7 +196,7 @@ export default function App() {
         >
           {/* inline name chooser */}
           <div className="mb-4">
-            <div className="section-title mb-2 text-neon-white">Set screename then either uplaod an image or select a color to contribute</div>
+            <div className="section-title mb-2 text-neon-white">Set screen name, then either upload an image or select a color to contribute</div>
             <p className="text-xs opacity-75 mb-2 text-neon-white">set your username</p>
             <div className="flex gap-2 items-center p-2 rounded-[12px] btn-neon-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
               <input
@@ -294,7 +294,7 @@ function Dropzone({ onFile, filename }: { onFile: (f: File) => void; filename?: 
       />
       <div className="text-neon-white text-center">
         <div style={{ fontSize: 22, lineHeight: 1 }}>&uarr;</div>
-        <div style={{ fontSize: 12, opacity: 0.85 }}>{filename || 'Upload imaage here or select a color below'}</div>
+        <div style={{ fontSize: 12, opacity: 0.85 }}>{filename || 'Upload image here or select a color below'}</div>
       </div>
     </div>
   )
