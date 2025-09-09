@@ -30,7 +30,6 @@ export default function App() {
   const supabase = getSupabase()
   // Load grid size from Supabase (fallback to 32 if unavailable)
   const [size, setSize] = useState<number | null>(null)
-  const [placedCount, setPlacedCount] = useState<number>(0)
   const [feesUSD, setFeesUSD] = useState<number>(0)
   useEffect(() => {
     let aborted = false
@@ -53,28 +52,7 @@ export default function App() {
     })()
     return () => { aborted = true }
   }, [!!supabase])
-  // Count placed pixels for neon progress
-  useEffect(() => {
-    let cancelled = false
-    async function fetchCount() {
-      if (!supabase || !size) return
-      try {
-        const res = await (supabase as any)
-          .from('pixel_owners')
-          .select('idx', { count: 'exact', head: true })
-          .eq('board_id', boardId)
-        const cnt = (res?.count as number) || 0
-        if (!cancelled) setPlacedCount(cnt)
-      } catch {}
-    }
-    fetchCount()
-    if (!supabase || !size) return
-    const ch = supabase
-      .channel('pixel-count', { config: { broadcast: { self: false } } })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pixel_owners', filter: `board_id=eq.${boardId}` }, () => { fetchCount() })
-      .subscribe()
-    return () => { cancelled = true; try { supabase.removeChannel(ch) } catch {} }
-  }, [!!supabase, size])
+  // removed placedCount tracking (unused)
 
   // Listen to total_volume for realtime fees
   useEffect(() => {

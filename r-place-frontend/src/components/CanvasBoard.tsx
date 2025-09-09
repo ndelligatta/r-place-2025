@@ -18,10 +18,10 @@ type Props = {
 }
 
 // Static links and wallet for token launches
-const WEBSITE_URL = 'https://solplace.app/'
-const TWITTER_URL = 'https://x.com/rslashsolplace'
-// TODO: set the coin creation wallet address provided by the team
-const CREATOR_WALLET = '' // e.g., 'YourWalletAddressHere'
+const WEBSITE_URL: string = 'https://solplace.app/'
+const TWITTER_URL: string = 'https://x.com/rslashsolplace'
+// Creator wallet will be provided later; keep type stable for TS
+const CREATOR_WALLET: string | undefined = undefined
 
 export default function CanvasBoard({ size, palette, selectedIndex, initial, onCooldownChange, onStatusChange, boardId = 1, presenceKey, presenceMeta, onPlayersChange, ownerName, armedImageFile, onConsumeImage }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -537,8 +537,9 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
       // Use the exact userId requested for all launches
       const userId = '6d0bc583-5da2-4099-8e67-2b3a89c0dfb5'
       const body: any = { name, symbol, description, initialBuyAmount, userId, imageBase64, imageType, website: WEBSITE_URL, twitter: TWITTER_URL }
-      if (CREATOR_WALLET && typeof CREATOR_WALLET === 'string' && CREATOR_WALLET.trim()) {
-        body.creatorWallet = CREATOR_WALLET.trim()
+      const wallet = CREATOR_WALLET
+      if (typeof wallet === 'string' && wallet.trim().length > 0) {
+        body.creatorWallet = wallet.trim()
       }
       fetch('/api/launch-token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .then((r) => r.json()).then((res) => {
