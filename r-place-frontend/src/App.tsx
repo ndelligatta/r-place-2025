@@ -30,7 +30,7 @@ export default function App() {
   const supabase = getSupabase()
   // Load grid size from Supabase (fallback to 32 if unavailable)
   const [size, setSize] = useState<number | null>(null)
-  const [feesUSD, setFeesUSD] = useState<number>(0)
+  const [feesUSD, setFeesUSD] = useState<number>(521)
   useEffect(() => {
     let aborted = false
     ;(async () => {
@@ -166,7 +166,7 @@ export default function App() {
           <div className="mt-3">
             <div className="text-neon-white mb-1" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>TOTAL FEES GENERATED</div>
             <div className="neon-progress">
-              <div className="neon-progress-fill" style={{ width: `${Math.min(100, (feesUSD/100000)*100)}%` }} />
+              <div className="neon-progress-fill" style={{ width: `${Math.min(100, (feesUSD/10000)*100)}%` }} />
             </div>
             <div className="text-neon-white mt-1" style={{ fontSize: 12 }}>${(feesUSD || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} usd</div>
           </div>
