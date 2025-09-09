@@ -55,6 +55,7 @@ export default function App() {
   }
 
   const [players, setPlayers] = useState<Array<{ key: string; meta: any }>>([])
+  const [armedImageFile, setArmedImageFile] = useState<File | null>(null)
 
   // Stable presence meta to avoid resubscribe thrash
   const presenceMetaMemo = useMemo(() => (me ? { name: me.name, color: me.color } : undefined), [me?.name, me?.color])
@@ -104,6 +105,8 @@ export default function App() {
             presenceMeta={presenceMetaMemo}
             onPlayersChange={setPlayers}
             ownerName={me?.name}
+            armedImageFile={armedImageFile}
+            onConsumeImage={() => setArmedImageFile(null)}
           />
         </div>
         <aside
@@ -112,7 +115,7 @@ export default function App() {
         >
           <h2 className="section-title mb-4">Palette</h2>
           <div className="flex-1 min-h-0">
-            <Palette colors={palette} selected={selected} onSelect={setSelected} cooldown={cooldown} />
+            <Palette colors={palette} selected={selected} onSelect={setSelected} cooldown={cooldown} onSelectImage={setArmedImageFile} />
           </div>
 
           <div className="mt-6 space-y-3 text-sm">

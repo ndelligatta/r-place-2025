@@ -78,6 +78,26 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     } catch { return null }
   }
 
+  function encodeImages(arr: Array<string | null>): string {
+    const map: Record<number, string> = {}
+    for (let i = 0; i < arr.length; i++) if (arr[i]) map[i] = arr[i] as string
+    try { return JSON.stringify(map) } catch { return '{}' }
+  }
+  function decodeImages(json: unknown, pixelCount: number): Array<string | null> | null {
+    if (!json) return null
+    try {
+      const obj = typeof json === 'string' ? JSON.parse(json) : json
+      const next = new Array(pixelCount).fill(null) as Array<string | null>
+      for (const k in obj as any) {
+        const idx = Number(k)
+        if (!Number.isFinite(idx) || idx < 0 || idx >= pixelCount) continue
+        const v = (obj as any)[k]
+        if (typeof v === 'string' && v) next[idx] = v
+      }
+      return next
+    } catch { return null }
+  }
+
   // Cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return
@@ -149,7 +169,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         {
           const res: any = await supabase
             .from('boards')
-            .select('data, owners_json')
+            .select('data, owners_json, images_json')
             .eq('id', boardId)
             .single()
           row = res?.data ?? null
@@ -178,9 +198,33 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
               if (onStatusChange) onStatusChange({ supabase: true, boardSource: localHasColors ? 'local' : 'server' })
             }
           }
-          // Load owners snapshot if present
+          // Load owners/images snapshot if present
           const ownersNext = decodeOwners((row as any).owners_json, size * size)
           if (ownersNext) setOwners(ownersNext)
+          try {
+            const imagesJson = (row as any).images_json
+            if (imagesJson) {
+              const obj = typeof imagesJson === 'string' ? JSON.parse(imagesJson) : imagesJson
+              const next = new Array(size * size).fill(null) as Array<string | null>
+              for (const k in obj as any) {
+                const idx = Number(k)
+                if (Number.isFinite(idx) && idx >= 0 && idx < next.length) next[idx] = (obj as any)[k]
+              }
+              setImages(next)
+            }
+          } catch {}
+          try {
+            const imagesJson = (row as any).images_json
+            if (imagesJson) {
+              const obj = typeof imagesJson === 'string' ? JSON.parse(imagesJson) : imagesJson
+              const next = new Array(size * size).fill(null) as Array<string | null>
+              for (const k in obj as any) {
+                const idx = Number(k)
+                if (Number.isFinite(idx) && idx >= 0 && idx < next.length) next[idx] = (obj as any)[k]
+              }
+              setImages(next)
+            }
+          } catch {}
         }
         if (error) {
           if (onStatusChange) onStatusChange({ supabase: true, boardSource: 'local' })
@@ -232,6 +276,23 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
         activeRef.current.set(key, { key, meta, last: now })
         emitActivePlayers()
       })
+      .on('broadcast', { event: 'image' }, (payload: any) => {
+        const p = payload?.payload as { x: number; y: number; url: string; owner?: string | null } | undefined
+        if (!p) return
+        const { x, y, url } = p
+        if (x < 0 || y < 0 || x >= size || y >= size) return
+        const idx = y * size + x
+        setImages((arr) => {
+          const next = arr.slice()
+          next[idx] = url
+          return next
+        })
+        setOwners((arr) => {
+          const next = arr.slice()
+          next[idx] = (payload?.payload?.owner ?? null) as any
+          return next
+        })
+      })
       // Presence kept for connection state only; player list derives from recent activity
       .subscribe()
     channelRef.current = channel
@@ -272,17 +333,34 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     // Clear to transparent
     ctx.clearRect(0, 0, w, h)
 
-    // Draw pixels
+    // Draw pixels/images
     for (let y = 0; y < dims.height; y++) {
       for (let x = 0; x < dims.width; x++) {
         const idx = y * dims.width + x
-        const colorIndex = data[idx] ?? 0
-        const color = palette[colorIndex] ?? '#000'
         const sx = Math.floor(x * px + originX)
         const sy = Math.floor(y * px + originY)
         const cw = px
         const ch = px
         if (sx + cw < 0 || sy + ch < 0 || sx > w || sy > h) continue
+
+        const url = images[idx]
+        if (url) {
+          let img = imageCacheRef.current.get(url)
+          if (!img) {
+            img = new Image()
+            img.crossOrigin = 'anonymous'
+            img.src = url
+            imageCacheRef.current.set(url, img)
+            img.onload = () => setTick((t) => t + 1)
+          }
+          if (img && img.complete) {
+            ctx.drawImage(img, sx, sy, cw, ch)
+            continue
+          }
+        }
+
+        const colorIndex = data[idx] ?? 0
+        const color = palette[colorIndex] ?? '#000'
         ctx.fillStyle = color
         ctx.fillRect(sx, sy, cw, ch)
       }
@@ -305,7 +383,7 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     ctx.lineWidth = 1
     ctx.strokeRect(originX + 0.5, originY + 0.5, boardW, boardH)
 
-  }, [data, palette, dims.height, dims.width, tick])
+  }, [data, images, palette, dims.height, dims.width, tick])
 
   // Persist board to localStorage (debounced)
   useEffect(() => {
@@ -344,6 +422,58 @@ export default function CanvasBoard({ size, palette, selectedIndex, initial, onC
     const { x, y } = canvasToCell(e.clientX, e.clientY)
     if (x < 0 || y < 0 || x >= dims.width || y >= dims.height) return
     const idx = y * dims.width + x
+    // If an image is armed, process/upload and place it
+    if (armedImageFile && supabase) {
+      (async () => {
+        try {
+          // Resize to a small square tile (e.g., 32x32)
+          const bm = await createImageBitmap(armedImageFile)
+          const tileSize = 32
+          const off = document.createElement('canvas')
+          off.width = tileSize; off.height = tileSize
+          const octx = off.getContext('2d')!
+          // cover-fit into square
+          const srcRatio = bm.width / bm.height
+          const dst = { x: 0, y: 0, w: tileSize, h: tileSize }
+          let sw = bm.width, sh = bm.height, sx0 = 0, sy0 = 0
+          if (srcRatio > 1) { // wider than tall
+            sh = bm.height
+            sw = sh
+            sx0 = (bm.width - sw) / 2
+          } else if (srcRatio < 1) { // taller
+            sw = bm.width
+            sh = sw
+            sy0 = (bm.height - sh) / 2
+          }
+          octx.clearRect(0,0,tileSize,tileSize)
+          octx.drawImage(bm as any, sx0, sy0, sw, sh, dst.x, dst.y, dst.w, dst.h)
+          const blob: Blob = await new Promise((res) => off.toBlob((b) => res(b as Blob), 'image/png', 1)!)
+          const ts = Date.now()
+          const path = `tiles/${boardId}/${idx}-${ts}.png`
+          const up = await (supabase as any).storage.from('tiles').upload(path, blob, { contentType: 'image/png', upsert: true })
+          let publicUrl: string | null = null
+          try { publicUrl = (supabase as any).storage.from('tiles').getPublicUrl(path).data.publicUrl as string } catch {}
+          if (!publicUrl && up?.data?.path) publicUrl = up.data.path
+          if (!publicUrl) return
+          // Update local images/owners
+          setImages((arr) => { const next = arr.slice(); next[idx] = publicUrl!; return next })
+          setOwners((arr) => { const next = arr.slice(); next[idx] = ownerName || null; return next })
+          // Broadcast image event
+          if (channelRef.current) {
+            try { channelRef.current.send({ type: 'broadcast', event: 'image', payload: { x, y, url: publicUrl, owner: ownerName || null } }) } catch {}
+          }
+          // Persist: update images_json (+ owners_json) and also pixel_images row
+          const ownersJson = encodeOwners([...owners.slice(0, idx), ownerName || null, ...owners.slice(idx + 1)])
+          const imagesJson = encodeImages([...images.slice(0, idx), publicUrl, ...images.slice(idx + 1)])
+          const payload: any = { id: boardId, data: encodeBoard(data), owners_json: ownersJson, images_json: imagesJson }
+          ;(supabase as any).from('boards').upsert(payload)
+          ;(supabase as any).from('pixel_images').upsert({ board_id: boardId, idx, path: publicUrl, owner: ownerName || null })
+          if (onConsumeImage) onConsumeImage()
+          setCooldown(3)
+        } catch {}
+      })()
+      return
+    }
     const nextState = (() => { const next = data.slice(); next[idx] = selectedIndex; return next })()
     setData(nextState)
     // Update owner locally and prepare owners snapshot for persistence

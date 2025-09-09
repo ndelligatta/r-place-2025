@@ -3,9 +3,10 @@ type Props = {
   selected: number
   onSelect: (idx: number) => void
   cooldown?: number
+  onSelectImage?: (file: File) => void
 }
 
-export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Props) {
+export default function Palette({ colors, selected, onSelect, cooldown = 0, onSelectImage }: Props) {
   return (
     <div className="flex flex-col gap-4 h-full min-h-0 relative">
       <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 overflow-auto pr-1">
@@ -40,6 +41,21 @@ export default function Palette({ colors, selected, onSelect, cooldown = 0 }: Pr
             </button>
           )
         })}
+
+        {/* Image swatch */}
+        <label className="relative h-16 rounded-md flex items-center justify-center border-8 border-transparent bg-black/30 cursor-pointer">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.currentTarget.files && e.currentTarget.files[0]
+              if (f && onSelectImage) onSelectImage(f)
+              e.currentTarget.value = ''
+            }}
+          />
+          <span className="text-xs font-semibold opacity-90">Image</span>
+        </label>
       </div>
 
       {cooldown > 0 ? (
